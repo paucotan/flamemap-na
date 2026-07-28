@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Navbar } from './components/Navbar';
 import { MapContainer } from './components/MapContainer';
 import { TimelineControl } from './components/TimelineControl';
@@ -194,6 +195,9 @@ export function App() {
       {showCreditsModal && (
         <CreditsModal onClose={() => setShowCreditsModal(false)} />
       )}
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
