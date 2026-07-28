@@ -75,7 +75,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   ];
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-30 pointer-events-none flex flex-col md:flex-row items-end justify-between gap-4">
+    <div className="absolute bottom-7 left-4 right-4 z-30 pointer-events-none flex flex-col md:flex-row items-end justify-between gap-4">
       {/* Left side: Legend & Dynamic Viewport Wind meter badge */}
       <div className="pointer-events-auto flex flex-col gap-2">
         {/* Dynamic Viewport Wind Status Badge */}
@@ -181,7 +181,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
       </div>
 
       {/* Right side: Layer Toggles */}
-      <div className="pointer-events-auto flamap-glass p-2.5 rounded-2xl flex flex-col gap-1.5">
+      <div className="pointer-events-auto flamap-glass p-2.5 rounded-2xl flex flex-col gap-1.5 mb-2 md:mb-3">
         <button
           onClick={() => onToggleLayer('hotspots')}
           className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-3 transition ${
