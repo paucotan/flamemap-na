@@ -65,7 +65,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **Original Concept**: Inspired by **[Flamap.fr](https://flamap.fr)** created by **[@GuillaumeRozier](https://x.com/GuillaumeRozier)**.
 - **Developer**: Created and maintained by **Paul Cohen-Tannugi** ([GitHub @paucotan](https://github.com/paucotan)).
-- **Buy Me a Coffee**: [buymeacoffee.com/paucotan](https://buymeacoffee.com/paucotan) *(100% of voluntary support is pledged to the official Canadian Red Cross BC & Alberta Wildfires Relief Appeal)*.
+- **Buy Me a Coffee**: [buymeacoffee.com/paucotan](https://buymeacoffee.com/paucotan) *(100% of voluntary support is pledged to official wildfire relief efforts like the United Way BC Wildfires Campaign)*.
 
 ---
 

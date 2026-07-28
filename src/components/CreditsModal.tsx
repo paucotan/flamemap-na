@@ -54,7 +54,7 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
             <span>100% Wildfire Relief Pledge</span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed mb-3">
-            100% of all voluntary coffee contributions and donations are passed directly to official wildfire emergency relief efforts including the <strong className="text-emerald-300">Canadian Red Cross British Columbia & Alberta Wildfire Appeals</strong>.
+            100% of all voluntary coffee contributions and donations are passed directly to official wildfire emergency relief efforts including <strong className="text-emerald-300">United Way BC Wildfires Campaign</strong>.
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <a
@@ -68,13 +68,13 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
               <ExternalLink className="w-3 h-3 opacity-70" />
             </a>
             <a
-              href="https://www.redcross.ca/how-we-help/current-emergency-responses/wildfires"
+              href="https://uwbc.ca/campaign/wildfires/"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-xs text-emerald-300 font-semibold transition border border-emerald-500/30"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Canadian Red Cross Wildfire Fund ↗</span>
+              <span>United Way BC Wildfires Fund ↗</span>
             </a>
           </div>
         </div>
