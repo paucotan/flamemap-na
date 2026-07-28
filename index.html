@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>FlameMap North America — Live Wildfire Locations, Timelines & Evacuations</title>
+    <meta name="title" content="FlameMap North America — Live Wildfire Locations, Timelines & Evacuations" />
+    <meta name="description" content="Citizen-centric real-time wildland fire map showing thermal satellite hotspots, fire perimeters, time-lapse playback, wind flow vectors, and emergency evacuation alerts across Canada & the United States. Inspired by Flamap.fr." />
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://flamemap-na.vercel.app/" />
+    <meta property="og:title" content="FlameMap North America — Live Wildfire Tracking" />
+    <meta property="og:description" content="Track live thermal satellite hotspots, wildfire perimeters, time-lapse playback, smoke plumes, and emergency evacuation alerts across Canada and the US. Inspired by Flamap.fr." />
+    <meta property="og:image" content="https://flamap.fr/og-image.png" />
+
+    <!-- Twitter / X Meta Tags -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://flamemap-na.vercel.app/" />
+    <meta property="twitter:title" content="FlameMap North America — Live Wildfire Map & Timelines" />
+    <meta property="twitter:description" content="Real-time satellite thermal anomalies, active fire perimeters, wind vectors, and evacuation orders across Canada & the United States. Inspired by @GuillaumeRozier." />
+    <meta property="twitter:image" content="https://flamap.fr/og-image.png" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- MapLibre GL CSS -->
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  </head>
+  <body class="bg-[#0f1115] text-slate-100 font-sans antialiased overflow-hidden selection:bg-orange-500 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
