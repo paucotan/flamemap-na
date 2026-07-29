@@ -140,14 +140,36 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-64 max-w-[calc(100vw-2rem)] ${
           showLegendMobile ? 'flex flex-col' : 'hidden md:flex flex-col'
         }`}>
+          {/* Header & Explicit Toggle Pills */}
+          <div className="flex items-center justify-between gap-1 mb-2 pb-1.5 border-b border-white/10">
+            <button
+              onClick={() => onToggleLayer('airQuality')}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1 ${
+                layers.airQuality ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Activity className="w-3 h-3" />
+              <span>Air Quality</span>
+            </button>
+            <button
+              onClick={() => {
+                if (layers.airQuality) onToggleLayer('airQuality');
+                if (!layers.hotspots) onToggleLayer('hotspots');
+              }}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1 ${
+                !layers.airQuality ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
+              <span>Burned Area</span>
+            </button>
+          </div>
+
           {layers.airQuality ? (
             <>
               <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
-                <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-xs font-semibold">Air Quality (AQI / AQHI)</span>
-                </div>
-                <span className="text-[9px] text-slate-400">US EPA / EC</span>
+                <span className="text-[10px] font-semibold text-slate-200">US EPA / EC Scale</span>
+                <span className="text-[9px] text-slate-400">AQI / AQHI</span>
               </div>
 
               <div className="space-y-1">
@@ -162,10 +184,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
           ) : (
             <>
               <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
-                <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                  <span className="w-2.5 h-2.5 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
-                  <span className="text-xs">{t.burnedArea}</span>
-                </div>
+                <span className="text-[10px] font-semibold text-slate-200">{t.burnedArea}</span>
                 <span className="text-[9px] text-slate-400">effis / cwfis</span>
               </div>
 
