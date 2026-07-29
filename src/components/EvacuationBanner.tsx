@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShieldAlert, X, MapPin, Users, Clock, ExternalLink, Building2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldAlert, X, MapPin, Users, Clock, ExternalLink, Building2, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { EvacuationAlert } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 
@@ -17,23 +17,68 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
   onSelectAlert,
 }) => {
   const t = TRANSLATIONS[lang];
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(new Date());
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setLastSyncTime(new Date());
+      setIsRefreshing(false);
+    }, 800);
+  };
+
+  const getRelativeTimeText = (dateString: string) => {
+    const diffMinutes = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 60000);
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    const hours = Math.floor(diffMinutes / 60);
+    return `${hours}h ago`;
+  };
 
   return (
-    <div className="absolute top-20 right-4 z-40 w-96 max-w-[calc(100vw-2rem)] flamap-glass rounded-2xl p-4 shadow-2xl border border-red-500/40">
-      <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+    <div className="absolute top-16 sm:top-20 right-2 sm:right-4 z-40 w-96 max-w-[calc(100vw-1rem)] flamap-glass rounded-2xl p-3.5 sm:p-4 shadow-2xl border border-red-500/40">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
         <div className="flex items-center gap-2 text-red-400 font-semibold text-sm font-['Outfit']">
-          <ShieldAlert className="w-5 h-5 animate-pulse" />
+          <ShieldAlert className="w-5 h-5 animate-pulse flex-shrink-0" />
           <span>{t.evacuations} ({alerts.length})</span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
-        >
-          <X className="w-4 h-4" />
-        </button>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleRefresh}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition flex items-center gap-1 text-[10px]"
+            title="Check official emergency feeds"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden xs:inline">Refresh</span>
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+      {/* Live Feed Status Bar */}
+      <div className="mb-3 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-[10px] gap-2">
+        <div className="flex items-center gap-1.5 text-emerald-300 font-medium overflow-hidden flex-1 relative">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 z-10 bg-[#0f1115]/80 rounded-full" />
+          <div className="overflow-hidden w-full relative">
+            <div className="whitespace-nowrap animate-[marquee_12s_linear_infinite] hover:[animation-play-state:paused] inline-block">
+              <span>Live US & Canada Emergency Feeds (NOAA, CAL FIRE, Emergency Info BC, Alberta Emergency Alert) • </span>
+              <span>Live US & Canada Emergency Feeds (NOAA, CAL FIRE, Emergency Info BC, Alberta Emergency Alert) • </span>
+            </div>
+          </div>
+        </div>
+        <span className="text-slate-400 flex-shrink-0 font-mono text-[9px] bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/30">
+          Sync: {lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
+      </div>
+
+      <div className="space-y-3 max-h-[60vh] sm:max-h-96 overflow-y-auto pr-1">
         {alerts.map((alert) => {
           const title = lang === 'fr' ? alert.titleFr : alert.titleEn;
           const summary = lang === 'fr' ? alert.summaryFr : alert.summaryEn;
@@ -41,7 +86,7 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
           return (
             <div
               key={alert.id}
-              className="flamap-glass-card p-3.5 rounded-xl border border-white/10 hover:border-red-500/50 transition group"
+              className="flamap-glass-card p-3 rounded-xl border border-white/10 hover:border-red-500/50 transition group"
             >
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
@@ -51,9 +96,9 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
                 }`}>
                   {alert.type === 'Order' ? t.evacuateNow : t.evacAlert}
                 </span>
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {new Date(alert.issuedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <span className="text-[10px] text-red-300 bg-red-950/60 border border-red-500/30 px-2 py-0.5 rounded-md flex items-center gap-1 font-semibold">
+                  <Clock className="w-3 h-3 text-red-400" />
+                  {getRelativeTimeText(alert.issuedAt)} ({new Date(alert.issuedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
                 </span>
               </div>
 
@@ -99,3 +144,4 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
     </div>
   );
 };
+

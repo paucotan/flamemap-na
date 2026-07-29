@@ -37,6 +37,14 @@ export const TRANSLATIONS = {
     followOnX: 'Follow @GuillaumeRozier on X',
     canadaTotal: 'Canada:',
     usaTotal: 'USA:',
+    settingsTitle: 'Settings & Preferences',
+    settingsSubtitle: 'Customize timezone, units, and language',
+    timezonePref: 'Timezone Preference',
+    autoDetectTz: 'Auto-Detect Local Timezone',
+    languagePref: 'Language / Langue',
+    unitsPref: 'Measurement Units',
+    metricUnits: 'Metric',
+    imperialUnits: 'Imperial',
   },
   fr: {
     appSubtitle: 'Amérique du Nord',
@@ -74,5 +82,13 @@ export const TRANSLATIONS = {
     followOnX: 'Suivre @GuillaumeRozier sur X',
     canadaTotal: 'Canada :',
     usaTotal: 'USA :',
+    settingsTitle: 'Réglages & Préférences',
+    settingsSubtitle: 'Personnaliser le fuseau horaire, les unités et la langue',
+    timezonePref: 'Fuseau horaire',
+    autoDetectTz: 'Détection automatique',
+    languagePref: 'Langue / Language',
+    unitsPref: 'Unités de mesure',
+    metricUnits: 'Métrique',
+    imperialUnits: 'Impérial',
   }
 };

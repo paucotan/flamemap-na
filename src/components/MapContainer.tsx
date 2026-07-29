@@ -405,7 +405,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     if (!layers.hotspots) return;
 
     // Filter to major fire complexes for prominent HTML Pill Badges to avoid overlap
-    const majorIncidents = incidents.filter(i => i.acresBurned > 1000 || i.status === 'Out of Control');
+    const isMobile = window.innerWidth < 768;
+    const majorIncidents = incidents.filter(i => isMobile ? i.acresBurned > 15000 : (i.acresBurned > 1000 || i.status === 'Out of Control'));
 
     majorIncidents.forEach(inc => {
       const el = document.createElement('div');
@@ -417,20 +418,18 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           border: 1px solid rgba(255, 255, 255, 0.2);
           box-shadow: 0 4px 16px rgba(0,0,0,0.7);
           border-radius: 9999px;
-          padding: 4px 10px;
+          padding: ${isMobile ? '2px 7px' : '4px 10px'};
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           cursor: pointer;
           transition: transform 0.15s ease;
         ">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #ff5722; box-shadow: 0 0 8px #ff5722; display: inline-block;"></span>
-          <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 11px; color: #ffffff; letter-spacing: -0.01em; white-space: nowrap;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #ff5722; box-shadow: 0 0 6px #ff5722; display: inline-block;"></span>
+          <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: ${isMobile ? '9px' : '11px'}; color: #ffffff; letter-spacing: -0.01em; white-space: nowrap;">
             ${inc.name}
           </span>
-          <span style="font-size: 10px; font-weight: 500; color: #94a3b8; font-family: 'Outfit', sans-serif;">
-            ${inc.provinceOrState}
-          </span>
+          ${!isMobile ? `<span style="font-size: 10px; font-weight: 500; color: #94a3b8; font-family: 'Outfit', sans-serif;">${inc.provinceOrState}</span>` : ''}
         </div>
       `;
 

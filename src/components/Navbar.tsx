@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Flame, ShieldAlert, Heart, Globe, ArrowUpRight, Settings, Clock, Share2, Check, RefreshCw } from 'lucide-react';
+import { Search, Flame, ShieldAlert, Heart, Globe, ArrowUpRight, Settings, Clock, Share2, Check, Menu, X, Layers } from 'lucide-react';
 import { UnitSystem, FireIncident, EvacuationAlert } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, getTimezoneBadgeLabel } from '../utils/timezone';
@@ -39,6 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const tzBadge = getTimezoneBadgeLabel(timezoneMode);
   const caIncidents = incidents.filter(i => i.country === 'CA');
@@ -75,28 +76,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   );
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-30 p-3 md:p-4 pointer-events-none flex flex-col md:flex-row md:items-center justify-between gap-3">
-      {/* Logo & Stats */}
-      <div className="flex items-center gap-3 flex-wrap pointer-events-auto">
-        <div className="flamap-glass px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-xl">
+    <header className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 md:p-4 pointer-events-none flex flex-col md:flex-row md:items-center justify-between gap-2">
+      {/* Top Main Bar */}
+      <div className="flex items-center justify-between gap-2 w-full md:w-auto pointer-events-auto">
+        {/* Logo */}
+        <div className="flamap-glass px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2.5 shadow-xl flex-shrink-0">
           <div className="flex items-center -space-x-1">
-            <div className="w-3.5 h-3.5 rounded-full bg-[#ff3b30] shadow-[0_0_10px_#ff3b30] animate-pulse" />
-            <div className="w-3.5 h-3.5 rounded-full bg-[#ff9500] shadow-[0_0_10px_#ff9500]" />
-            <div className="w-3.5 h-3.5 rounded-full bg-[#ffcc00] shadow-[0_0_8px_#ffcc00]" />
+            <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#ff3b30] shadow-[0_0_10px_#ff3b30] animate-pulse" />
+            <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#ff9500] shadow-[0_0_10px_#ff9500]" />
+            <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#ffcc00] shadow-[0_0_8px_#ffcc00]" />
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-lg tracking-tight text-white font-['Outfit']">FlameMap</span>
-              <span className="text-[10px] uppercase tracking-wider font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded">
-                {t.appSubtitle}
-              </span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-base sm:text-lg tracking-tight text-white font-['Outfit']">FlameMap</span>
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded">
+              {t.appSubtitle}
+            </span>
           </div>
         </div>
 
-        {/* Regional Burn Badges */}
+        {/* Regional Burn Badges (Desktop) */}
         <div className="hidden lg:flex items-center gap-2">
-          <div className="flamap-glass px-3.5 py-2 rounded-xl text-xs flex items-center gap-2">
+          <div className="flamap-glass px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500" />
             <span className="text-slate-400 font-medium">{t.canadaTotal}</span>
             <span className="font-semibold text-slate-100">
@@ -105,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : `${formatNumber(Math.round(caTotalHa * 2.47105))} acres`}
             </span>
           </div>
-          <div className="flamap-glass px-3.5 py-2 rounded-xl text-xs flex items-center gap-2">
+          <div className="flamap-glass px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500" />
             <span className="text-slate-400 font-medium">{t.usaTotal}</span>
             <span className="font-semibold text-slate-100">
@@ -115,12 +115,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Mobile Action Buttons (Search toggle & Hamburger) */}
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            onClick={onToggleEvacuations}
+            className={`flamap-glass p-2 rounded-xl text-xs font-medium flex items-center gap-1 transition ${
+              showEvacuationDrawer || alerts.length > 0
+                ? 'border-red-500/50 bg-red-500/10 text-red-300'
+                : 'text-slate-300'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4 text-red-400" />
+            {alerts.length > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                {alerts.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flamap-glass p-2 rounded-xl text-slate-200 hover:text-white border border-white/10"
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
-      {/* Search, Share, Timezone & Settings */}
-      <div className="flex items-center gap-2 flex-wrap pointer-events-auto">
+      {/* Desktop Bar Tools & Mobile Expandable Drawer */}
+      <div className={`pointer-events-auto flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto ${
+        mobileMenuOpen ? 'flex bg-[#0f1115]/95 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-2xl mt-1' : 'hidden md:flex'
+      }`}>
         {/* Search */}
-        <div className="relative flex-1 md:w-60">
+        <div className="relative flex-1 md:w-56 lg:w-64">
           <div className="flamap-glass rounded-xl flex items-center px-3 py-2 border border-white/10 focus-within:border-orange-500/50 transition">
             <Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
             <input
@@ -151,6 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         onSelectIncidentOrLocation({ lat: inc.latitude, lng: inc.longitude, zoom: 10, name: inc.name });
                         setShowSearchResults(false);
                         setSearchQuery('');
+                        setMobileMenuOpen(false);
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -168,6 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         onSelectIncidentOrLocation(loc);
                         setShowSearchResults(false);
                         setSearchQuery('');
+                        setMobileMenuOpen(false);
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -183,65 +214,72 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* 1-Click Share Button */}
-        <button
-          onClick={handleShareMapLink}
-          className={`flamap-glass px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
-            copiedLink
-              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-              : 'text-slate-200 hover:bg-white/10'
-          }`}
-          title="Share direct map link"
-        >
-          {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-orange-400" />}
-          <span className="hidden sm:inline">{copiedLink ? 'Link Copied!' : 'Share'}</span>
-        </button>
+        {/* Action Controls Group */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Share */}
+          <button
+            onClick={handleShareMapLink}
+            className={`flex-1 md:flex-none justify-center flamap-glass px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
+              copiedLink
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                : 'text-slate-200 hover:bg-white/10'
+            }`}
+          >
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-orange-400" />}
+            <span>{copiedLink ? 'Copied!' : 'Share'}</span>
+          </button>
 
-        {/* Timezone Badge */}
-        <div className="flamap-glass px-2.5 py-2 rounded-xl text-xs font-semibold text-cyan-300 flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5 text-cyan-400" />
-          <span>{tzBadge}</span>
-        </div>
-
-        {/* Settings Gear Button (⚙️) */}
-        <button
-          onClick={onOpenSettings}
-          className="flamap-glass p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition border border-white/10"
-          title="Open Settings (Timezone, Language, Units)"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
-
-        {/* Evacuation Alert Drawer */}
-        <button
-          onClick={onToggleEvacuations}
-          className={`flamap-glass px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition ${
-            showEvacuationDrawer || alerts.length > 0
-              ? 'border-red-500/50 bg-red-500/10 text-red-300'
-              : 'text-slate-300 hover:bg-white/10'
-          }`}
-        >
-          <div className="relative">
-            <ShieldAlert className="w-4 h-4 text-red-400" />
-            {alerts.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-ping" />
-            )}
+          {/* Timezone Badge */}
+          <div className="flex-1 md:flex-none justify-center flamap-glass px-2.5 py-2 rounded-xl text-xs font-semibold text-cyan-300 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{tzBadge}</span>
           </div>
-          <span className="hidden sm:inline">{t.evacuations}</span>
-          <span className="bg-red-500/30 text-red-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-            {alerts.length}
-          </span>
-        </button>
 
-        {/* Credits */}
-        <button
-          onClick={onOpenCredits}
-          className="flamap-glass px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5"
-        >
-          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-500/30" />
-          <span className="hidden sm:inline">{t.sourcesCredits}</span>
-        </button>
+          {/* Evacuation Desktop Button */}
+          <button
+            onClick={() => {
+              onToggleEvacuations();
+              setMobileMenuOpen(false);
+            }}
+            className={`hidden md:flex flamap-glass px-3 py-2 rounded-xl text-xs font-medium items-center gap-2 transition ${
+              showEvacuationDrawer || alerts.length > 0
+                ? 'border-red-500/50 bg-red-500/10 text-red-300'
+                : 'text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4 text-red-400" />
+            <span>{t.evacuations}</span>
+            <span className="bg-red-500/30 text-red-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+              {alerts.length}
+            </span>
+          </button>
+
+          {/* Settings */}
+          <button
+            onClick={() => {
+              onOpenSettings();
+              setMobileMenuOpen(false);
+            }}
+            className="flamap-glass p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition border border-white/10"
+            title="Open Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+
+          {/* Credits */}
+          <button
+            onClick={() => {
+              onOpenCredits();
+              setMobileMenuOpen(false);
+            }}
+            className="flamap-glass p-2.5 md:px-3 md:py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5"
+          >
+            <Heart className="w-4 h-4 text-rose-400 fill-rose-500/30" />
+            <span className="hidden lg:inline">{t.sourcesCredits}</span>
+          </button>
+        </div>
       </div>
     </header>
   );
 };
+

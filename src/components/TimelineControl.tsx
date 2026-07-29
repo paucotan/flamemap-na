@@ -1,5 +1,5 @@
-import React from 'react';
-import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown } from 'lucide-react';
 import { UnitSystem, ViewportWind } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, formatTimestampWithTimezone } from '../utils/timezone';
@@ -36,6 +36,8 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   onToggleDataUpdates,
 }) => {
   const t = TRANSLATIONS[lang];
+  const [showLayersMobile, setShowLayersMobile] = useState(false);
+  const [showLegendMobile, setShowLegendMobile] = useState(false);
 
   const baseDate = new Date('2026-07-28T17:46:00Z');
   const activeDate = new Date(baseDate.getTime() - currentAgeHours * 3600 * 1000);
@@ -75,36 +77,58 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   ];
 
   return (
-    <div className="absolute bottom-7 left-4 right-4 z-30 pointer-events-none flex flex-col md:flex-row items-end justify-between gap-4">
-      {/* Left side: Legend & Dynamic Viewport Wind meter badge */}
-      <div className="pointer-events-auto flex flex-col gap-2">
+    <div className="absolute bottom-3 sm:bottom-7 left-2 sm:left-4 right-2 sm:right-4 z-30 pointer-events-none flex flex-col md:flex-row items-stretch md:items-end justify-between gap-2.5 sm:gap-4">
+      {/* Top Floating Controls on Mobile (Wind, Legend Toggle, Layers Toggle) */}
+      <div className="pointer-events-auto flex items-center justify-between md:flex-col md:items-start gap-2">
         {/* Dynamic Viewport Wind Status Badge */}
-        <div className="flamap-glass px-3.5 py-2 rounded-xl text-xs flex items-center gap-2.5 text-slate-200 shadow-xl">
+        <div className="flamap-glass px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-2 text-slate-200 shadow-xl">
           <Compass
-            className="w-4 h-4 text-cyan-400 transition-transform duration-500"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 transition-transform duration-500 flex-shrink-0"
             style={{ transform: `rotate(${compassRotation}deg)` }}
           />
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-white text-xs">
             {speedDisplay}
           </span>
-          <span className="text-slate-400 text-[11px]">
+          <span className="text-slate-400 text-[10px] sm:text-[11px] hidden xs:inline">
             {gustDisplay}
           </span>
         </div>
 
-        {/* Legend Box matching Flamap.fr */}
-        <div className="flamap-glass p-3 rounded-2xl w-60">
-          <div className="flex items-center justify-between text-xs mb-2">
+        {/* Mobile Toggles for Legend & Layers */}
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            onClick={() => setShowLegendMobile(!showLegendMobile)}
+            className="flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium text-slate-300 flex items-center gap-1 border border-white/10"
+          >
+            <span>{t.burnedArea}</span>
+            {showLegendMobile ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+          </button>
+          <button
+            onClick={() => setShowLayersMobile(!showLayersMobile)}
+            className={`flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border ${
+              showLayersMobile ? 'bg-orange-500/20 text-orange-300 border-orange-500/40' : 'text-slate-300 border-white/10'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-orange-400" />
+            <span>Layers</span>
+          </button>
+        </div>
+
+        {/* Legend Box (Desktop or expanded on Mobile) */}
+        <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-60 ${
+          showLegendMobile ? 'flex flex-col' : 'hidden md:flex flex-col'
+        }`}>
+          <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
             <div className="flex items-center gap-1.5 font-medium text-slate-200">
-              <span className="w-3 h-3 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
-              <span>{t.burnedArea}</span>
+              <span className="w-2.5 h-2.5 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
+              <span className="text-xs">{t.burnedArea}</span>
             </div>
-            <span className="text-[10px] text-slate-400">effis / cwfis</span>
+            <span className="text-[9px] text-slate-400">effis / cwfis</span>
           </div>
 
           <div className="space-y-1">
             <div className="h-2 rounded-full w-full bg-gradient-to-r from-[#451a03] via-[#ef4444] to-[#ffcc00]" />
-            <div className="flex justify-between text-[10px] text-slate-400 font-medium px-0.5">
+            <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-400 font-medium px-0.5">
               <span>{t.daysAgo(5)}</span>
               <span>24 h</span>
               <span className="text-amber-400 font-semibold">{t.justNow}</span>
@@ -113,31 +137,31 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         </div>
       </div>
 
-      {/* Center: Player */}
+      {/* Center: Player Timeline Scrubber */}
       <div className="pointer-events-auto flex-1 max-w-xl w-full flex flex-col items-center">
-        <div className="mb-1.5 text-shadow text-white text-base md:text-lg font-semibold capitalize tracking-wide font-['Outfit'] flex items-center gap-2 bg-black/50 px-4 py-1 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
+        <div className="mb-1 text-shadow text-white text-xs sm:text-sm md:text-base font-semibold capitalize tracking-wide font-['Outfit'] flex items-center gap-1.5 bg-black/60 px-3 py-0.5 sm:px-4 sm:py-1 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
           <span>{formattedDateString}</span>
         </div>
 
-        <div className="flamap-glass p-3 rounded-2xl w-full flex items-center gap-3 relative">
+        <div className="flamap-glass p-2 sm:p-3 rounded-2xl w-full flex items-center gap-2 sm:gap-3 relative">
           <button
             onClick={onTogglePlay}
-            className="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white flex items-center justify-center shadow-lg shadow-orange-500/30 transition transform active:scale-95 flex-shrink-0"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white flex items-center justify-center shadow-lg shadow-orange-500/30 transition transform active:scale-95 flex-shrink-0"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5 fill-white" />
+              <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
             ) : (
-              <Play className="w-5 h-5 fill-white ml-0.5" />
+              <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white ml-0.5" />
             )}
           </button>
 
-          <div className="flex-1 flex flex-col gap-1 relative pt-3">
-            <div className="absolute top-0 left-0 right-0 h-3 flex items-end justify-between px-1 pointer-events-none opacity-60">
+          <div className="flex-1 flex flex-col gap-1 relative pt-2 sm:pt-3">
+            <div className="absolute top-0 left-0 right-0 h-2.5 sm:h-3 flex items-end justify-between px-1 pointer-events-none opacity-60">
               {histogramBars.map((height, idx) => (
                 <div
                   key={`bar-${idx}`}
-                  className="w-1 rounded-t bg-gradient-to-t from-orange-600 to-amber-400"
+                  className="w-0.5 sm:w-1 rounded-t bg-gradient-to-t from-orange-600 to-amber-400"
                   style={{ height: `${(height / 120) * 100}%` }}
                 />
               ))}
@@ -150,16 +174,16 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
               step="1"
               value={120 - currentAgeHours}
               onChange={(e) => onChangeAgeHours(120 - parseFloat(e.target.value))}
-              className="w-full h-2.5 bg-slate-800/90 rounded-lg appearance-none cursor-pointer accent-orange-500"
+              className="w-full h-2 sm:h-2.5 bg-slate-800/90 rounded-lg appearance-none cursor-pointer accent-orange-500"
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-white/5 p-0.5 sm:p-1 rounded-xl border border-white/10">
             {[1, 2, 5].map((spd) => (
               <button
                 key={spd}
                 onClick={() => onChangeSpeed(spd)}
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${
+                className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[9px] sm:text-[10px] font-bold transition ${
                   playbackSpeed === spd
                     ? 'bg-orange-500 text-white'
                     : 'text-slate-400 hover:text-slate-200'
@@ -172,68 +196,73 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
 
           <button
             onClick={onToggleDataUpdates}
-            className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition border border-white/10 flex-shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition border border-white/10 flex-shrink-0"
             title={t.dataUpdates}
           >
-            <Info className="w-4 h-4" />
+            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
 
-      {/* Right side: Layer Toggles */}
-      <div className="pointer-events-auto flamap-glass p-2.5 rounded-2xl flex flex-col gap-1.5 mb-2 md:mb-3">
-        <button
-          onClick={() => onToggleLayer('hotspots')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-3 transition ${
-            layers.hotspots ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40' : 'text-slate-400 opacity-60'
-          }`}
-        >
-          <div className="flex items-center gap-1.5">
-            <Flame className="w-3.5 h-3.5" />
-            <span>{t.hotspots}</span>
-          </div>
-          <Eye className="w-3.5 h-3.5" />
-        </button>
+      {/* Right side: Layer Toggles (Desktop or Collapsible Mobile) */}
+      <div className={`pointer-events-auto flamap-glass p-2 sm:p-2.5 rounded-2xl flex-col gap-1.5 ${
+        showLayersMobile ? 'flex w-full' : 'hidden md:flex'
+      }`}>
+        <div className="grid grid-cols-2 md:flex md:flex-col gap-1.5 w-full">
+          <button
+            onClick={() => onToggleLayer('hotspots')}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${
+              layers.hotspots ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40' : 'text-slate-400 opacity-60'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5" />
+              <span>{t.hotspots}</span>
+            </div>
+            <Eye className="w-3.5 h-3.5" />
+          </button>
 
-        <button
-          onClick={() => onToggleLayer('smoke')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-3 transition ${
-            layers.smoke ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400 opacity-60'
-          }`}
-        >
-          <div className="flex items-center gap-1.5">
-            <CloudFog className="w-3.5 h-3.5 text-amber-300" />
-            <span>{t.smokeForecast}</span>
-          </div>
-          <Eye className="w-3.5 h-3.5" />
-        </button>
+          <button
+            onClick={() => onToggleLayer('smoke')}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${
+              layers.smoke ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400 opacity-60'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <CloudFog className="w-3.5 h-3.5 text-amber-300" />
+              <span>{t.smokeForecast}</span>
+            </div>
+            <Eye className="w-3.5 h-3.5" />
+          </button>
 
-        <button
-          onClick={() => onToggleLayer('perimeters')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-3 transition ${
-            layers.perimeters ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'text-slate-400 opacity-60'
-          }`}
-        >
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-red-900 border border-red-500" />
-            <span>{t.perimeters}</span>
-          </div>
-          <Eye className="w-3.5 h-3.5" />
-        </button>
+          <button
+            onClick={() => onToggleLayer('perimeters')}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${
+              layers.perimeters ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'text-slate-400 opacity-60'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded bg-red-900 border border-red-500" />
+              <span>{t.perimeters}</span>
+            </div>
+            <Eye className="w-3.5 h-3.5" />
+          </button>
 
-        <button
-          onClick={() => onToggleLayer('wind')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-3 transition ${
-            layers.wind ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 opacity-60'
-          }`}
-        >
-          <div className="flex items-center gap-1.5">
-            <Wind className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{t.windVectors}</span>
-          </div>
-          <Eye className="w-3.5 h-3.5" />
-        </button>
+          <button
+            onClick={() => onToggleLayer('wind')}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${
+              layers.wind ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 opacity-60'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <Wind className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{t.windVectors}</span>
+            </div>
+            <Eye className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
+

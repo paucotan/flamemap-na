@@ -27,7 +27,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const detectedTz = getDetectedTimezone();
 
   const timezoneOptions: { mode: TimezoneMode; label: string; sub: string }[] = [
-    { mode: 'auto', label: 'Auto-Detect Local Timezone', sub: detectedTz },
+    { mode: 'auto', label: t.autoDetectTz, sub: detectedTz },
     { mode: 'UTC', label: 'UTC (Coordinated Universal Time)', sub: 'UTC' },
     { mode: 'America/Vancouver', label: 'Pacific Time (PT)', sub: 'America/Vancouver' },
     { mode: 'America/Denver', label: 'Mountain Time (MT)', sub: 'America/Denver' },
@@ -50,8 +50,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <Settings className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white font-['Outfit']">Settings & Preferences</h3>
-            <p className="text-xs text-slate-400">Customize timezone, units, and language</p>
+            <h3 className="text-xl font-bold text-white font-['Outfit']">{t.settingsTitle}</h3>
+            <p className="text-xs text-slate-400">{t.settingsSubtitle}</p>
           </div>
         </div>
 
@@ -59,7 +59,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="mb-5 space-y-2">
           <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Timezone Preference</span>
+            <span>{t.timezonePref}</span>
           </label>
 
           <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
@@ -87,7 +87,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="mb-5 space-y-2">
           <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Globe className="w-3.5 h-3.5 text-orange-400" />
-            <span>Language / Langue</span>
+            <span>{t.languagePref}</span>
           </label>
 
           <div className="grid grid-cols-2 gap-2">
@@ -121,7 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="mb-6 space-y-2">
           <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Scale className="w-3.5 h-3.5 text-amber-400" />
-            <span>Measurement Units</span>
+            <span>{t.unitsPref}</span>
           </label>
 
           <div className="grid grid-cols-2 gap-2">
@@ -134,7 +134,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               }`}
             >
               <div>
-                <div className="font-medium">Metric</div>
+                <div className="font-medium">{t.metricUnits}</div>
                 <div className="text-[10px] text-slate-400">ha / km/h</div>
               </div>
               {unitSystem === 'metric' && <Check className="w-4 h-4 text-amber-400" />}
@@ -149,7 +149,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               }`}
             >
               <div>
-                <div className="font-medium">Imperial</div>
+                <div className="font-medium">{t.imperialUnits}</div>
                 <div className="text-[10px] text-slate-400">acres / mph</div>
               </div>
               {unitSystem === 'imperial' && <Check className="w-4 h-4 text-amber-400" />}
@@ -167,3 +167,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
+
