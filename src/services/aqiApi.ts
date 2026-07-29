@@ -14,22 +14,36 @@ export interface AqiStation {
   color: string;
 }
 
-// Key North American urban and wildfire region monitoring stations
+// Expanded North American regional monitoring stations for smooth spatial AQI heatmap interpolation
 export const AQI_STATIONS_BASE: Omit<AqiStation, 'aqi' | 'pm25' | 'categoryEn' | 'categoryFr' | 'color'>[] = [
+  // BC & Pacific Northwest
   { id: 'aqi-van', city: 'Vancouver', provinceOrState: 'BC', country: 'CA', latitude: 49.2827, longitude: -123.1207 },
   { id: 'aqi-vic', city: 'Victoria', provinceOrState: 'BC', country: 'CA', latitude: 48.4284, longitude: -123.3656 },
   { id: 'aqi-kel', city: 'Kelowna', provinceOrState: 'BC', country: 'CA', latitude: 49.8880, longitude: -119.4960 },
   { id: 'aqi-kam', city: 'Kamloops', provinceOrState: 'BC', country: 'CA', latitude: 50.6745, longitude: -120.3273 },
+  { id: 'aqi-pg', city: 'Prince George', provinceOrState: 'BC', country: 'CA', latitude: 53.9171, longitude: -122.7497 },
+  { id: 'aqi-sea', city: 'Seattle', provinceOrState: 'WA', country: 'US', latitude: 47.6062, longitude: -122.3321 },
+  { id: 'aqi-por', city: 'Portland', provinceOrState: 'OR', country: 'US', latitude: 45.5152, longitude: -122.6784 },
+  { id: 'aqi-spo', city: 'Spokane', provinceOrState: 'WA', country: 'US', latitude: 47.6588, longitude: -117.4260 },
+
+  // Alberta & Prairies
   { id: 'aqi-jas', city: 'Jasper', provinceOrState: 'AB', country: 'CA', latitude: 52.8730, longitude: -118.0820 },
   { id: 'aqi-cal', city: 'Calgary', provinceOrState: 'AB', country: 'CA', latitude: 51.0447, longitude: -114.0719 },
   { id: 'aqi-edm', city: 'Edmonton', provinceOrState: 'AB', country: 'CA', latitude: 53.5461, longitude: -113.4938 },
-  { id: 'aqi-sea', city: 'Seattle', provinceOrState: 'WA', country: 'US', latitude: 47.6062, longitude: -122.3321 },
-  { id: 'aqi-por', city: 'Portland', provinceOrState: 'OR', country: 'US', latitude: 45.5152, longitude: -122.6784 },
+  { id: 'aqi-reg', city: 'Regina', provinceOrState: 'SK', country: 'CA', latitude: 50.4452, longitude: -104.6189 },
+  { id: 'aqi-win', city: 'Winnipeg', provinceOrState: 'MB', country: 'CA', latitude: 49.8951, longitude: -97.1384 },
+
+  // California & Western US
   { id: 'aqi-sfo', city: 'San Francisco', provinceOrState: 'CA', country: 'US', latitude: 37.7749, longitude: -122.4194 },
   { id: 'aqi-sac', city: 'Sacramento', provinceOrState: 'CA', country: 'US', latitude: 38.5816, longitude: -121.4944 },
+  { id: 'aqi-lax', city: 'Los Angeles', provinceOrState: 'CA', country: 'US', latitude: 34.0522, longitude: -118.2437 },
+  { id: 'aqi-boi', city: 'Boise', provinceOrState: 'ID', country: 'US', latitude: 43.6150, longitude: -116.2023 },
   { id: 'aqi-den', city: 'Denver', provinceOrState: 'CO', country: 'US', latitude: 39.7392, longitude: -104.9903 },
+
+  // Eastern Canada & US
   { id: 'aqi-tor', city: 'Toronto', provinceOrState: 'ON', country: 'CA', latitude: 43.6532, longitude: -79.3832 },
   { id: 'aqi-mtl', city: 'Montreal', provinceOrState: 'QC', country: 'CA', latitude: 45.5017, longitude: -73.5673 },
+  { id: 'aqi-nyc', city: 'New York', provinceOrState: 'NY', country: 'US', latitude: 40.7128, longitude: -74.0060 },
 ];
 
 export function getAqiCategory(usAqi: number): { categoryEn: string; categoryFr: string; color: string } {

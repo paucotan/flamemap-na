@@ -327,6 +327,47 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         }
       });
 
+      // 6. Add AQI Interpolated Heatmap Source (Apple Maps Style)
+      map.addSource('aqi-heatmap-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+
+      map.addLayer({
+        id: 'aqi-heatmap-layer',
+        type: 'heatmap',
+        source: 'aqi-heatmap-source',
+        maxzoom: 14,
+        paint: {
+          'heatmap-weight': ['get', 'normalizedAqi'],
+          'heatmap-intensity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            3, 1.2,
+            9, 2.2
+          ],
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(0,0,0,0)',
+            0.15, 'rgba(56, 189, 248, 0.40)', // Blue (Good 1-3)
+            0.40, 'rgba(234, 179, 8, 0.55)',  // Yellow (Moderate 4-6)
+            0.65, 'rgba(249, 115, 22, 0.70)', // Orange (High 7-9)
+            1.00, 'rgba(225, 29, 72, 0.85)'   // Red/Crimson (Very High 10+)
+          ],
+          'heatmap-radius': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            3, 80,
+            8, 180
+          ],
+          'heatmap-opacity': 0.60
+        }
+      });
+
       // Click listener for all incidents (NIFC / CWFIS)
       map.on('click', 'all-incidents-circle', (e) => {
         if (!e.features || e.features.length === 0) return;
@@ -638,6 +679,33 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     }
   }, [alerts, mapLoaded]);
 
+  // Reactive AQI Heatmap update
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+
+    const source = map.getSource('aqi-heatmap-source') as maplibregl.GeoJSONSource;
+    if (source) {
+      const features: GeoJSON.Feature[] = (aqiStations || []).map(st => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [st.longitude, st.latitude]
+        },
+        properties: {
+          id: st.id,
+          aqi: st.aqi,
+          normalizedAqi: Math.min(1.0, Math.max(0.1, st.aqi / 250))
+        }
+      }));
+
+      source.setData({
+        type: 'FeatureCollection',
+        features
+      });
+    }
+  }, [aqiStations, mapLoaded]);
+
   // Layer Visibility
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
@@ -653,6 +721,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     }
     if (map.getLayer('smoke-heatmap')) {
       map.setLayoutProperty('smoke-heatmap', 'visibility', layers.smoke ? 'visible' : 'none');
+    }
+    if (map.getLayer('aqi-heatmap-layer')) {
+      map.setLayoutProperty('aqi-heatmap-layer', 'visibility', layers.airQuality ? 'visible' : 'none');
     }
     if (map.getLayer('perimeters-fill')) {
       map.setLayoutProperty('perimeters-fill', 'visibility', layers.perimeters ? 'visible' : 'none');
