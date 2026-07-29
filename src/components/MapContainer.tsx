@@ -2,17 +2,21 @@ import React, { useEffect, useState, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Hotspot, FireIncident, EvacuationAlert, WindPoint, UnitSystem, ViewportWind } from '../types/fire';
 import { getWindAtCoordinates, fetchLiveWindAtCoordinates } from '../services/weatherApi';
+import { AqiStation } from '../services/aqiApi';
+import { Language } from '../utils/i18n';
 
 interface MapContainerProps {
   hotspots: Hotspot[];
   incidents: FireIncident[];
   alerts: EvacuationAlert[];
   windPoints: WindPoint[];
+  aqiStations: AqiStation[];
+  lang: Language;
   maxAgeHours: number;
   unitSystem: UnitSystem;
   onSelectIncident: (incident: FireIncident) => void;
   onViewportWindChange: (wind: ViewportWind) => void;
-  layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean };
+  layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality: boolean };
 }
 
 export const MapContainer: React.FC<MapContainerProps> = ({
@@ -20,6 +24,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   incidents,
   alerts,
   windPoints,
+  aqiStations,
+  lang,
   maxAgeHours,
   unitSystem,
   onSelectIncident,
@@ -29,6 +35,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const aqiMarkersRef = useRef<maplibregl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
 
   const parseUrlHash = (): { center: [number, number]; zoom: number } => {
@@ -444,6 +451,78 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       markersRef.current.push(marker);
     });
   }, [incidents, mapLoaded, layers.hotspots, onSelectIncident]);
+
+  // Render Air Quality Index (AQI) Station Badges
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+
+    aqiMarkersRef.current.forEach(m => m.remove());
+    aqiMarkersRef.current = [];
+
+    if (!layers.airQuality || !aqiStations || aqiStations.length === 0) return;
+
+    aqiStations.forEach(st => {
+      const el = document.createElement('div');
+      el.className = 'flamap-aqi-pill';
+      const category = lang === 'fr' ? st.categoryFr : st.categoryEn;
+
+      el.innerHTML = `
+        <div style="
+          background: rgba(15, 17, 21, 0.92);
+          backdrop-filter: blur(10px);
+          border: 1px solid ${st.color};
+          box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+          border-radius: 9999px;
+          padding: 3px 8px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          cursor: pointer;
+        ">
+          <span style="
+            background: ${st.color};
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 9999px;
+          ">${st.aqi}</span>
+          <span style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 10px; color: #ffffff;">
+            ${st.city}
+          </span>
+        </div>
+      `;
+
+      el.addEventListener('click', () => {
+        new maplibregl.Popup()
+          .setLngLat([st.longitude, st.latitude])
+          .setHTML(`
+            <div style="font-family: 'Outfit', sans-serif;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+                <strong style="font-size:13px; color:#fff;">${st.city}, ${st.provinceOrState} (${st.country})</strong>
+                <span style="background:${st.color}; color:#fff; font-weight:bold; font-size:11px; padding:2px 6px; border-radius:6px;">
+                  AQI ${st.aqi}
+                </span>
+              </div>
+              <div style="font-size:11px; color:#cbd5e1; line-height:1.5;">
+                <div>Status: <strong style="color:${st.color}">${category}</strong></div>
+                <div>PM₂.₅: <strong>${st.pm25} µg/m³</strong></div>
+                <div style="margin-top:4px; font-size:9px; color:#94a3b8;">Source: Open-Meteo Air Quality Service</div>
+              </div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([st.longitude, st.latitude])
+        .addTo(map);
+
+      aqiMarkersRef.current.push(marker);
+    });
+  }, [aqiStations, mapLoaded, layers.airQuality, lang]);
 
   // Reactive Hotspots GeoJSON update
   useEffect(() => {

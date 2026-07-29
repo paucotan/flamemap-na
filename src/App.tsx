@@ -19,6 +19,8 @@ import { fetchWindGrid } from './services/weatherApi';
 import { Language } from './utils/i18n';
 import { TimezoneMode } from './utils/timezone';
 
+import { fetchLiveAqiStations, AqiStation } from './services/aqiApi';
+
 export function App() {
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
   const [lang, setLang] = useState<Language>('en');
@@ -33,6 +35,7 @@ export function App() {
   const [incidents, setIncidents] = useState<FireIncident[]>([]);
   const [alerts, setAlerts] = useState<EvacuationAlert[]>([]);
   const [windPoints, setWindPoints] = useState<WindPoint[]>([]);
+  const [aqiStations, setAqiStations] = useState<AqiStation[]>([]);
   const [viewportWind, setViewportWind] = useState<ViewportWind | undefined>(undefined);
 
   const [selectedIncident, setSelectedIncident] = useState<FireIncident | null>(null);
@@ -47,6 +50,7 @@ export function App() {
     wind: true,
     evacuations: true,
     smoke: true,
+    airQuality: true,
   });
 
   useEffect(() => {
@@ -65,6 +69,9 @@ export function App() {
 
       const wind = await fetchWindGrid(40.0, 62.0, -135.0, -75.0);
       setWindPoints(wind);
+
+      const aqiData = await fetchLiveAqiStations();
+      setAqiStations(aqiData);
     }
 
     loadAllData();
@@ -85,7 +92,7 @@ export function App() {
     }
   };
 
-  const handleToggleLayer = (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke') => {
+  const handleToggleLayer = (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke' | 'airQuality') => {
     setLayers((prev) => ({ ...prev, [layerName]: !prev[layerName] }));
   };
 
@@ -115,6 +122,8 @@ export function App() {
         incidents={incidents}
         alerts={alerts}
         windPoints={windPoints}
+        aqiStations={aqiStations}
+        lang={lang}
         maxAgeHours={maxAgeHours}
         unitSystem={unitSystem}
         onSelectIncident={(inc) => setSelectedIncident(inc)}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown } from 'lucide-react';
+import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown, Activity } from 'lucide-react';
 import { UnitSystem, ViewportWind } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, formatTimestampWithTimezone } from '../utils/timezone';
@@ -15,8 +15,8 @@ interface TimelineControlProps {
   lang: Language;
   timezoneMode: TimezoneMode;
   viewportWind?: ViewportWind;
-  layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean };
-  onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke') => void;
+  layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality: boolean };
+  onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke' | 'airQuality') => void;
   onToggleDataUpdates: () => void;
 }
 
@@ -223,6 +223,19 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
           </button>
 
           <button
+            onClick={() => onToggleLayer('airQuality')}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${
+              layers.airQuality ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'text-slate-400 opacity-60'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{t.airQuality}</span>
+            </div>
+            <Eye className="w-3.5 h-3.5" />
+          </button>
+
+          <button
             onClick={() => onToggleLayer('smoke')}
             className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${
               layers.smoke ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400 opacity-60'
@@ -265,4 +278,5 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
     </div>
   );
 };
+
 
