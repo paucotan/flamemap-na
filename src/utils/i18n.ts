@@ -51,6 +51,11 @@ export const TRANSLATIONS = {
     aqiGood: 'Good (0-50)',
     aqiModerate: 'Moderate',
     aqiHazardous: 'Hazardous (200+)',
+    windInfoTitle: 'Live Viewport Wind Conditions',
+    windInfoSource: 'Open-Meteo Weather API & NOAA GFS 10m Vector Model',
+    windInfoModel: 'Global Forecast System (GFS 0.25°)',
+    windInfoUpdated: 'Updated Hourly (10m Surface Elevation)',
+    toggleWindLayer: 'Toggle Wind Vector Animation',
   },
   fr: {
     appSubtitle: 'Amérique du Nord',
@@ -86,7 +91,7 @@ export const TRANSLATIONS = {
     inspiredBy: 'Inspiré de Flamap.fr',
     inspiredText: 'Cette plateforme est directement inspirée de Flamap.fr créée par @GuillaumeRozier en France.',
     visitFlamap: 'Visiter Flamap.fr',
-    followOnX: 'Suivre @GuillaumeRozier sur X',
+    followOnX: 'Suivre @GuillaumeRozier on X',
     canadaTotal: 'Canada :',
     usaTotal: 'USA :',
     settingsTitle: 'Réglages & Préférences',
@@ -102,5 +107,10 @@ export const TRANSLATIONS = {
     aqiGood: 'Bon (0-50)',
     aqiModerate: 'Modéré',
     aqiHazardous: 'Dangeureux (200+)',
+    windInfoTitle: 'Conditions de vent en direct',
+    windInfoSource: 'API Open-Meteo & Modèle vectoriel NOAA GFS 10m',
+    windInfoModel: 'Global Forecast System (GFS 0,25°)',
+    windInfoUpdated: 'Mise à jour toutes les heures (Surface 10m)',
+    toggleWindLayer: 'Basculer l\'animation des vents',
   }
 };

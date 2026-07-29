@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown, Activity, Globe2, Map } from 'lucide-react';
+import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown, Activity, Globe2, Map, X } from 'lucide-react';
 import { UnitSystem, ViewportWind } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, formatTimestampWithTimezone } from '../utils/timezone';
@@ -44,6 +44,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   const t = TRANSLATIONS[lang];
   const [showLayersMobile, setShowLayersMobile] = useState(false);
   const [showLegendMobile, setShowLegendMobile] = useState(false);
+  const [showWindModal, setShowWindModal] = useState(false);
 
   const baseDate = new Date('2026-07-28T17:46:00Z');
   const activeDate = new Date(baseDate.getTime() - currentAgeHours * 3600 * 1000);
@@ -155,20 +156,92 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         )}
       </div>
 
-      {/* Top Floating Controls on Mobile (Wind, Legend Toggle, Layers Toggle) */}
-      <div className="pointer-events-auto flex items-center justify-between md:flex-col md:items-start gap-2">
-        {/* Dynamic Viewport Wind Status Badge */}
-        <div className="flamap-glass px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-2 text-slate-200 shadow-xl">
-          <Compass
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 transition-transform duration-500 flex-shrink-0"
-            style={{ transform: `rotate(${compassRotation}deg)` }}
-          />
-          <span className="font-semibold text-white text-xs">
-            {speedDisplay}
-          </span>
-          <span className="text-slate-400 text-[10px] sm:text-[11px] hidden xs:inline">
-            {gustDisplay}
-          </span>
+      {/* Top Floating Controls on Mobile & Desktop (Wind, Legend Toggle, Layers Toggle) */}
+      <div className="pointer-events-auto flex items-center justify-between md:flex-col md:items-start gap-2 relative">
+        {/* Interactive Viewport Wind Status Badge */}
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setShowWindModal(!showWindModal)}
+            className="flamap-glass px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-1.5 sm:gap-2 text-slate-200 shadow-xl hover:bg-white/10 transition border border-white/10 group cursor-pointer whitespace-nowrap"
+            title="Click for wind model details & options"
+          >
+            <Compass
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 transition-transform duration-500 flex-shrink-0 group-hover:scale-110"
+              style={{ transform: `rotate(${compassRotation}deg)` }}
+            />
+            <span className="font-semibold text-white text-xs whitespace-nowrap">
+              {speedDisplay}
+            </span>
+            <span className="text-slate-400 text-[10px] sm:text-[11px] hidden xs:inline whitespace-nowrap">
+              {gustDisplay}
+            </span>
+            <Info className="w-3 h-3 text-cyan-400/70 ml-0.5 flex-shrink-0" />
+          </button>
+
+          {/* Wind Info Popover Card */}
+          {showWindModal && (
+            <div className="absolute left-0 bottom-full md:bottom-auto md:top-full mb-2 md:mb-0 md:mt-2 w-72 sm:w-80 flamap-glass p-4 rounded-2xl border border-cyan-500/30 shadow-2xl z-50 animate-in fade-in zoom-in duration-150">
+              <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Wind className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-bold text-white">{t.windInfoTitle}</span>
+                </div>
+                <button
+                  onClick={() => setShowWindModal(false)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
+                  <span className="text-slate-400 font-medium">Speed / Gust:</span>
+                  <span className="text-white font-bold">{speedDisplay} {gustDisplay}</span>
+                </div>
+
+                <div className="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
+                  <span className="text-slate-400 font-medium">Direction:</span>
+                  <span className="text-cyan-300 font-bold">{cardinalDir} ({compassRotation}°)</span>
+                </div>
+
+                <div className="pt-1">
+                  <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Data Source & Model</div>
+                  <p className="text-[11px] text-slate-300 leading-normal">
+                    {t.windInfoSource}
+                  </p>
+                  <div className="text-[10px] text-cyan-400/90 mt-1">
+                    • {t.windInfoModel}<br />
+                    • {t.windInfoUpdated}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => onToggleLayer('wind')}
+                    className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                      layers.wind
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                        : 'bg-white/5 text-slate-400 border border-white/10'
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{t.windVectors}</span>
+                  </button>
+
+                  <a
+                    href="https://open-meteo.com/en/docs"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition border border-white/10"
+                    title="Open-Meteo Documentation ↗"
+                  >
+                    <Globe2 className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile Toggles for Legend & Layers */}
@@ -182,7 +255,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
               showLegendMobile ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'text-slate-300 border-white/10'
             }`}
           >
-            <span>{layers.airQuality ? t.airQuality : t.burnedArea}</span>
+            <span>{layers.airQuality ? (lang === 'fr' ? 'IQA' : 'Air Quality') : t.burnedArea}</span>
             {showLegendMobile ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
           </button>
           <button
