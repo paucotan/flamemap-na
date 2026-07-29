@@ -93,7 +93,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
 
   return (
     <div className="absolute bottom-3 sm:bottom-7 left-2 sm:left-4 right-2 sm:right-4 z-30 pointer-events-none flex flex-col md:flex-row items-stretch md:items-end justify-between gap-2.5 sm:gap-4">
-      {/* Mobile Floating Drawer Popups (Legend or Layers - Positioned cleanly above controls) */}
+      {/* Mobile Floating Drawer Popups (Legend or Layers - Positioned cleanly as an overlay above controls) */}
       <div className="pointer-events-auto w-full md:hidden">
         {showLegendMobile && (
           <div className="flamap-glass p-3 rounded-2xl w-full border border-white/20 shadow-2xl mb-2 animate-in slide-in-from-bottom-2 duration-150">
@@ -157,12 +157,12 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
       </div>
 
       {/* Top Floating Controls on Mobile & Desktop (Wind, Legend Toggle, Layers Toggle) */}
-      <div className="pointer-events-auto flex items-center justify-between md:flex-col md:items-start gap-2 relative">
+      <div className="pointer-events-auto flex items-center justify-between md:flex-col md:items-start gap-1.5 sm:gap-2 relative">
         {/* Interactive Viewport Wind Status Badge */}
         <div className="relative flex-shrink-0">
           <button
             onClick={() => setShowWindModal(!showWindModal)}
-            className="flamap-glass px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-1.5 sm:gap-2 text-slate-200 shadow-xl hover:bg-white/10 transition border border-white/10 group cursor-pointer whitespace-nowrap"
+            className="flamap-glass px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs flex items-center gap-1 sm:gap-1.5 text-slate-200 shadow-xl hover:bg-white/10 transition border border-white/10 group cursor-pointer whitespace-nowrap"
             title="Click for wind model details & options"
           >
             <Compass
@@ -245,30 +245,30 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         </div>
 
         {/* Mobile Toggles for Legend & Layers */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-1.5 md:hidden flex-shrink-0">
           <button
             onClick={() => {
               setShowLegendMobile(!showLegendMobile);
               if (!showLegendMobile) setShowLayersMobile(false);
             }}
-            className={`flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border ${
+            className={`flamap-glass px-2 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border whitespace-nowrap ${
               showLegendMobile ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'text-slate-300 border-white/10'
             }`}
           >
-            <span>{layers.airQuality ? (lang === 'fr' ? 'IQA' : 'Air Quality') : t.burnedArea}</span>
-            {showLegendMobile ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+            <span className="whitespace-nowrap">{layers.airQuality ? (lang === 'fr' ? 'IQA' : 'AQI') : (lang === 'fr' ? 'Terre' : 'Burned')}</span>
+            {showLegendMobile ? <ChevronDown className="w-3 h-3 flex-shrink-0" /> : <ChevronUp className="w-3 h-3 flex-shrink-0" />}
           </button>
           <button
             onClick={() => {
               setShowLayersMobile(!showLayersMobile);
               if (!showLayersMobile) setShowLegendMobile(false);
             }}
-            className={`flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border ${
+            className={`flamap-glass px-2 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border whitespace-nowrap ${
               showLayersMobile ? 'bg-orange-500/20 text-orange-300 border-orange-500/40' : 'text-slate-300 border-white/10'
             }`}
           >
-            <Layers className="w-3.5 h-3.5 text-orange-400" />
-            <span>{t.layersLabel}</span>
+            <Layers className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+            <span className="whitespace-nowrap">{t.layersLabel}</span>
           </button>
         </div>
 
