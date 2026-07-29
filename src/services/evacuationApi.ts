@@ -129,5 +129,51 @@ export const EVACUATION_ALERTS: EvacuationAlert[] = [
 ];
 
 export async function fetchEvacuationAlerts(): Promise<EvacuationAlert[]> {
-  return EVACUATION_ALERTS;
+  try {
+    const res = await fetch('https://api.open511.gov.bc.ca/events?status=ACTIVE&event_type=INCIDENT');
+    if (!res.ok) return EVACUATION_ALERTS;
+
+    const data = await res.json();
+    if (!data.events || !Array.isArray(data.events)) return EVACUATION_ALERTS;
+
+    // Filter to major highway closures / wildland hazard events
+    const driveBcAlerts: EvacuationAlert[] = data.events
+      .filter((ev: any) => {
+        const desc = (ev.description || '').toLowerCase();
+        return (ev.severity === 'MAJOR' || desc.includes('road closed') || desc.includes('wildfire') || desc.includes('evacuation')) && ev.geography;
+      })
+      .slice(0, 8)
+      .map((ev: any, idx: number) => {
+        const isFire = (ev.event_subtypes || []).includes('FIRE') || ev.description?.toLowerCase().includes('wildfire');
+        const coords: [number, number] = ev.geography.type === 'Point' 
+          ? ev.geography.coordinates 
+          : ev.geography.coordinates[0];
+
+        const headline = ev.roads?.[0]?.name ? `${ev.roads[0].name} Road Closure` : 'Highway Closure Alert';
+        const cleanDesc = ev.description ? ev.description.replace(/\n/g, ' ') : 'Road closed due to active emergency incident.';
+
+        return {
+          id: `drivebc-${ev.id || idx}`,
+          titleEn: `ROAD CLOSURE (DriveBC) — ${headline}`,
+          titleFr: `FERMETURE DE ROUTE (DriveBC) — ${headline}`,
+          type: (isFire ? 'Order' : 'Warning') as 'Order' | 'Warning',
+          region: 'British Columbia',
+          country: 'CA',
+          affectedPopulationApprox: isFire ? 1500 : 500,
+          issuedAt: ev.updated || ev.created || new Date().toISOString(),
+          summaryEn: cleanDesc,
+          summaryFr: cleanDesc,
+          officialUrl: ev.url ? ev.url.replace('api.open511.gov.bc.ca/events', 'www.drivebc.ca') : 'https://www.drivebc.ca',
+          authorityName: 'DriveBC / BC Ministry of Transportation',
+          driveBcUrl: 'https://www.drivebc.ca',
+          coordinates: coords,
+        };
+      });
+
+    // Merge DriveBC alerts with core evacuation alerts
+    return [...EVACUATION_ALERTS, ...driveBcAlerts];
+  } catch (e) {
+    console.warn('DriveBC API fetch error, falling back to cached alerts:', e);
+    return EVACUATION_ALERTS;
+  }
 }

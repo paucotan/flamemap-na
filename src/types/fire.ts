@@ -43,6 +43,7 @@ export interface EvacuationAlert {
   summaryFr: string;
   officialUrl: string; // Official government emergency authority link
   authorityName: string; // e.g. Emergency Info BC, Alberta Emergency Alert, CAL FIRE
+  driveBcUrl?: string; // Optional direct DriveBC road closure link (e.g. drivebc.ca/DBC-93768)
   coordinates: [number, number]; // [lng, lat]
   geometry?: any;
 }
