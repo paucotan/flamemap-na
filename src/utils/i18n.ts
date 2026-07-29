@@ -46,6 +46,10 @@ export const TRANSLATIONS = {
     unitsPref: 'Measurement Units',
     metricUnits: 'Metric',
     imperialUnits: 'Imperial',
+    airQualityScale: 'US EPA / EC Air Quality Scale',
+    aqiGood: 'Good (0-50)',
+    aqiModerate: 'Moderate',
+    aqiHazardous: 'Hazardous (200+)',
   },
   fr: {
     appSubtitle: 'Amérique du Nord',
@@ -92,5 +96,9 @@ export const TRANSLATIONS = {
     unitsPref: 'Unités de mesure',
     metricUnits: 'Métrique',
     imperialUnits: 'Impérial',
+    airQualityScale: 'Échelle IQA (US EPA / EC)',
+    aqiGood: 'Bon (0-50)',
+    aqiModerate: 'Modéré',
+    aqiHazardous: 'Dangeureux (200+)',
   }
 };

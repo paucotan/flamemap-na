@@ -123,15 +123,15 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
             {layers.airQuality ? (
               <>
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-xs font-semibold text-slate-200">US EPA / EC Scale</span>
+                  <span className="text-xs font-semibold text-slate-200">{t.airQualityScale}</span>
                   <span className="text-[10px] text-slate-400">AQI / AQHI</span>
                 </div>
                 <div className="space-y-1">
                   <div className="h-2.5 rounded-full w-full bg-gradient-to-r from-[#38bdf8] via-[#22c55e] via-[#eab308] via-[#f97316] to-[#e11d48]" />
                   <div className="flex justify-between text-[10px] text-slate-300 font-medium px-0.5">
-                    <span className="text-sky-400 font-semibold">Good (0-50)</span>
-                    <span className="text-yellow-400 font-semibold">Moderate</span>
-                    <span className="text-rose-400 font-semibold">Hazardous (200+)</span>
+                    <span className="text-sky-400 font-semibold">{t.aqiGood}</span>
+                    <span className="text-yellow-400 font-semibold">{t.aqiModerate}</span>
+                    <span className="text-rose-400 font-semibold">{t.aqiHazardous}</span>
                   </div>
                 </div>
               </>
@@ -182,7 +182,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
               showLegendMobile ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'text-slate-300 border-white/10'
             }`}
           >
-            <span>{layers.airQuality ? 'Air Quality' : t.burnedArea}</span>
+            <span>{layers.airQuality ? t.airQuality : t.burnedArea}</span>
             {showLegendMobile ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
           </button>
           <button
@@ -210,7 +210,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
               }`}
             >
               <Activity className="w-3 h-3" />
-              <span>Air Quality</span>
+              <span>{t.airQuality}</span>
             </button>
             <button
               onClick={() => {
@@ -222,23 +222,23 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
-              <span>Burned Area</span>
+              <span>{t.burnedArea}</span>
             </button>
           </div>
 
           {layers.airQuality ? (
             <>
               <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
-                <span className="text-[10px] font-semibold text-slate-200">US EPA / EC Scale</span>
+                <span className="text-[10px] font-semibold text-slate-200">{t.airQualityScale}</span>
                 <span className="text-[9px] text-slate-400">AQI / AQHI</span>
               </div>
 
               <div className="space-y-1">
                 <div className="h-2.5 rounded-full w-full bg-gradient-to-r from-[#38bdf8] via-[#22c55e] via-[#eab308] via-[#f97316] to-[#e11d48]" />
                 <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-300 font-medium px-0.5 whitespace-nowrap">
-                  <span className="text-sky-400 font-semibold">Good (0-50)</span>
-                  <span className="text-yellow-400 font-semibold">Moderate</span>
-                  <span className="text-rose-400 font-semibold">Hazardous (200+)</span>
+                  <span className="text-sky-400 font-semibold">{t.aqiGood}</span>
+                  <span className="text-yellow-400 font-semibold">{t.aqiModerate}</span>
+                  <span className="text-rose-400 font-semibold">{t.aqiHazardous}</span>
                 </div>
               </div>
             </>
