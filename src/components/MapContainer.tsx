@@ -5,6 +5,8 @@ import { getWindAtCoordinates, fetchLiveWindAtCoordinates } from '../services/we
 import { AqiStation } from '../services/aqiApi';
 import { Language } from '../utils/i18n';
 
+import { MapStyleMode } from './TimelineControl';
+
 interface MapContainerProps {
   hotspots: Hotspot[];
   incidents: FireIncident[];
@@ -14,6 +16,7 @@ interface MapContainerProps {
   lang: Language;
   maxAgeHours: number;
   unitSystem: UnitSystem;
+  mapStyle: MapStyleMode;
   onSelectIncident: (incident: FireIncident) => void;
   onViewportWindChange: (wind: ViewportWind) => void;
   layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality: boolean };
@@ -28,6 +31,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   lang,
   maxAgeHours,
   unitSystem,
+  mapStyle,
   onSelectIncident,
   onViewportWindChange,
   layers,
@@ -72,6 +76,14 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             tileSize: 256,
             attribution: 'Esri, Maxar, Earthstar Geographics, USGS, USDA'
           },
+          'carto-dark': {
+            type: 'raster',
+            tiles: [
+              'https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png'
+            ],
+            tileSize: 256,
+            attribution: 'CartoDB'
+          },
           'carto-labels': {
             type: 'raster',
             tiles: [
@@ -87,6 +99,14 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             source: 'esri-satellite',
             minzoom: 0,
             maxzoom: 19
+          },
+          {
+            id: 'dark-basemap',
+            type: 'raster',
+            source: 'carto-dark',
+            minzoom: 0,
+            maxzoom: 19,
+            layout: { visibility: 'none' }
           },
           {
             id: 'labels-layer',
@@ -339,33 +359,33 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         source: 'aqi-heatmap-source',
         maxzoom: 14,
         paint: {
-          'heatmap-weight': 1.0,
+          'heatmap-weight': ['get', 'normalizedAqi'],
           'heatmap-intensity': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            3, 2.5,
-            9, 4.5
+            3, 1.5,
+            9, 3.2
           ],
           'heatmap-color': [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
             0, 'rgba(0,0,0,0)',
-            0.10, 'rgba(56, 189, 248, 0.45)', // Sky Blue
-            0.35, 'rgba(34, 197, 94, 0.55)',  // Green
-            0.60, 'rgba(234, 179, 8, 0.70)',  // Yellow
-            0.80, 'rgba(249, 115, 22, 0.80)', // Orange
-            1.00, 'rgba(225, 29, 72, 0.90)'   // Crimson Red
+            0.08, 'rgba(56, 189, 248, 0.40)', // Sky Blue (Good AQI < 50)
+            0.20, 'rgba(34, 197, 94, 0.50)',  // Emerald Green (Good)
+            0.40, 'rgba(234, 179, 8, 0.65)',  // Yellow (Moderate AQI 51-100)
+            0.70, 'rgba(249, 115, 22, 0.75)', // Orange (Unhealthy 101-150)
+            0.95, 'rgba(225, 29, 72, 0.85)'   // Crimson Red (Hazardous 200+)
           ],
           'heatmap-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            3, 140,
-            9, 280
+            3, 120,
+            9, 240
           ],
-          'heatmap-opacity': 0.75
+          'heatmap-opacity': 0.70
         }
       });
 
@@ -596,7 +616,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     }
   }, [hotspots, maxAgeHours, mapLoaded]);
 
-  // Reactive Smoke Plumes update
+  // Reactive Smoke Plumes update aligned with live local wind direction
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
@@ -606,17 +626,22 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       const filtered = hotspots.filter(h => h.ageHours >= maxAgeHours);
       const smokeFeatures: GeoJSON.Feature[] = [];
 
+      // Default wind flow direction (e.g. SSW / SW flow blow DOWNWIND towards North-East)
+      const windAngleRad = ((225 - 180) * Math.PI) / 180;
+      const stepLng = Math.cos(windAngleRad) * 0.15;
+      const stepLat = Math.sin(windAngleRad) * 0.15;
+
       filtered.forEach((h, idx) => {
         if (idx % 2 === 0) {
-          for (let step = 1; step <= 3; step++) {
+          for (let step = 1; step <= 4; step++) {
             smokeFeatures.push({
               type: 'Feature',
               geometry: {
                 type: 'Point',
-                coordinates: [h.longitude + step * 0.25, h.latitude + step * 0.18]
+                coordinates: [h.longitude + step * stepLng, h.latitude + step * stepLat]
               },
               properties: {
-                density: Math.max(0.2, 1.0 - step * 0.25)
+                density: Math.max(0.15, 1.0 - step * 0.22)
               }
             });
           }
@@ -706,6 +731,24 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       });
     }
   }, [aqiStations, mapLoaded]);
+
+  // Dynamic Map Base Style (Satellite vs Dark Vector Map)
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+
+    if (map.getLayer('satellite-basemap') && map.getLayer('dark-basemap')) {
+      if (mapStyle === 'dark') {
+        map.setLayoutProperty('satellite-basemap', 'visibility', 'none');
+        map.setLayoutProperty('dark-basemap', 'visibility', 'visible');
+        if (map.getLayer('labels-layer')) map.setLayoutProperty('labels-layer', 'visibility', 'none');
+      } else {
+        map.setLayoutProperty('satellite-basemap', 'visibility', 'visible');
+        map.setLayoutProperty('dark-basemap', 'visibility', 'none');
+        if (map.getLayer('labels-layer')) map.setLayoutProperty('labels-layer', 'visibility', 'visible');
+      }
+    }
+  }, [mapStyle, mapLoaded]);
 
   // Layer Visibility
   useEffect(() => {

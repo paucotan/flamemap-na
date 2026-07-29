@@ -21,10 +21,13 @@ import { TimezoneMode } from './utils/timezone';
 
 import { fetchLiveAqiStations, AqiStation } from './services/aqiApi';
 
+import { MapStyleMode } from './components/TimelineControl';
+
 export function App() {
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
   const [lang, setLang] = useState<Language>('en');
   const [timezoneMode, setTimezoneMode] = useState<TimezoneMode>('auto');
+  const [mapStyle, setMapStyle] = useState<MapStyleMode>('satellite');
 
   const [maxAgeHours, setMaxAgeHours] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -126,6 +129,7 @@ export function App() {
         lang={lang}
         maxAgeHours={maxAgeHours}
         unitSystem={unitSystem}
+        mapStyle={mapStyle}
         onSelectIncident={(inc) => setSelectedIncident(inc)}
         onViewportWindChange={(w) => setViewportWind(w)}
         layers={layers}
@@ -146,6 +150,8 @@ export function App() {
         lang={lang}
         timezoneMode={timezoneMode}
         viewportWind={viewportWind}
+        mapStyle={mapStyle}
+        onSelectMapStyle={(style) => setMapStyle(style)}
         layers={layers}
         onToggleLayer={handleToggleLayer}
         onToggleDataUpdates={() => setShowDataUpdatesDrawer((prev) => !prev)}

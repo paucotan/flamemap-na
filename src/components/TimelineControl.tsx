@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown, Activity } from 'lucide-react';
+import { Play, Pause, Compass, Info, Flame, Eye, Wind, CloudFog, Layers, ChevronUp, ChevronDown, Activity, Globe2, Map } from 'lucide-react';
 import { UnitSystem, ViewportWind } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, formatTimestampWithTimezone } from '../utils/timezone';
+
+export type MapStyleMode = 'satellite' | 'dark' | 'topo';
 
 interface TimelineControlProps {
   currentAgeHours: number;
@@ -15,6 +17,8 @@ interface TimelineControlProps {
   lang: Language;
   timezoneMode: TimezoneMode;
   viewportWind?: ViewportWind;
+  mapStyle: MapStyleMode;
+  onSelectMapStyle: (style: MapStyleMode) => void;
   layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality: boolean };
   onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke' | 'airQuality') => void;
   onToggleDataUpdates: () => void;
@@ -31,6 +35,8 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   lang,
   timezoneMode,
   viewportWind,
+  mapStyle,
+  onSelectMapStyle,
   layers,
   onToggleLayer,
   onToggleDataUpdates,
@@ -48,15 +54,23 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
     lang === 'fr' ? 'fr-FR' : 'en-US'
   );
 
+  const compassRotation = viewportWind?.directionDegrees || 225;
+
+  const getCardinalDirection = (deg: number): string => {
+    const val = Math.floor((deg / 22.5) + 0.5);
+    const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    return arr[val % 16];
+  };
+
+  const cardinalDir = getCardinalDirection(compassRotation);
+
   const speedDisplay = unitSystem === 'metric'
-    ? `${viewportWind?.speedKmh || 22} km/h`
-    : `${viewportWind?.speedMph || 14} mph`;
+    ? `${cardinalDir} ${viewportWind?.speedKmh || 22} km/h`
+    : `${cardinalDir} ${viewportWind?.speedMph || 14} mph`;
 
   const gustDisplay = unitSystem === 'metric'
     ? `(raf. ${viewportWind?.gustKmh || 32} km/h)`
     : `(gust ${viewportWind?.gustMph || 20} mph)`;
-
-  const compassRotation = viewportWind?.directionDegrees || 225;
 
   React.useEffect(() => {
     if (!isPlaying) return;
@@ -114,26 +128,49 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
           </button>
         </div>
 
-        {/* Legend Box (Desktop or expanded on Mobile) */}
-        <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-60 ${
+        {/* Legend Box (Dynamic: Switches between Burned Area and Apple Maps AQI Index) */}
+        <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-64 ${
           showLegendMobile ? 'flex flex-col' : 'hidden md:flex flex-col'
         }`}>
-          <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
-            <div className="flex items-center gap-1.5 font-medium text-slate-200">
-              <span className="w-2.5 h-2.5 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
-              <span className="text-xs">{t.burnedArea}</span>
-            </div>
-            <span className="text-[9px] text-slate-400">effis / cwfis</span>
-          </div>
+          {layers.airQuality ? (
+            <>
+              <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
+                <div className="flex items-center gap-1.5 font-medium text-slate-200">
+                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-xs font-semibold">Air Quality (AQI / AQHI)</span>
+                </div>
+                <span className="text-[9px] text-slate-400">US EPA / EC</span>
+              </div>
 
-          <div className="space-y-1">
-            <div className="h-2 rounded-full w-full bg-gradient-to-r from-[#451a03] via-[#ef4444] to-[#ffcc00]" />
-            <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-400 font-medium px-0.5">
-              <span>{t.daysAgo(5)}</span>
-              <span>24 h</span>
-              <span className="text-amber-400 font-semibold">{t.justNow}</span>
-            </div>
-          </div>
+              <div className="space-y-1">
+                <div className="h-2.5 rounded-full w-full bg-gradient-to-r from-[#38bdf8] via-[#22c55e] via-[#eab308] via-[#f97316] to-[#e11d48]" />
+                <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-300 font-medium px-0.5">
+                  <span className="text-sky-400 font-semibold">Good (0-50)</span>
+                  <span className="text-yellow-400 font-semibold">Moderate</span>
+                  <span className="text-rose-400 font-semibold">Hazardous (200+)</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
+                <div className="flex items-center gap-1.5 font-medium text-slate-200">
+                  <span className="w-2.5 h-2.5 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
+                  <span className="text-xs">{t.burnedArea}</span>
+                </div>
+                <span className="text-[9px] text-slate-400">effis / cwfis</span>
+              </div>
+
+              <div className="space-y-1">
+                <div className="h-2 rounded-full w-full bg-gradient-to-r from-[#451a03] via-[#ef4444] to-[#ffcc00]" />
+                <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-400 font-medium px-0.5">
+                  <span>{t.daysAgo(5)}</span>
+                  <span>24 h</span>
+                  <span className="text-amber-400 font-semibold">{t.justNow}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -204,10 +241,32 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         </div>
       </div>
 
-      {/* Right side: Layer Toggles (Desktop or Collapsible Mobile) */}
+      {/* Right side: Layer & Map Style Toggles */}
       <div className={`pointer-events-auto flamap-glass p-2 sm:p-2.5 rounded-2xl flex-col gap-1.5 ${
         showLayersMobile ? 'flex w-full' : 'hidden md:flex'
       }`}>
+        {/* Map Base Mode Switcher */}
+        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10 mb-0.5">
+          <button
+            onClick={() => onSelectMapStyle('satellite')}
+            className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition ${
+              mapStyle === 'satellite' ? 'bg-orange-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Globe2 className="w-3 h-3" />
+            <span>Satellite</span>
+          </button>
+          <button
+            onClick={() => onSelectMapStyle('dark')}
+            className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition ${
+              mapStyle === 'dark' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Map className="w-3 h-3" />
+            <span>Dark</span>
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 md:flex md:flex-col gap-1.5 w-full">
           <button
             onClick={() => onToggleLayer('hotspots')}
