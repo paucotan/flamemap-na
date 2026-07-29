@@ -104,7 +104,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
                 }`}
               >
                 <Activity className="w-3.5 h-3.5" />
-                <span>Air Quality</span>
+                <span>{t.airQuality}</span>
               </button>
               <button
                 onClick={() => {
@@ -116,7 +116,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
                 }`}
               >
                 <span className="w-2.5 h-2.5 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
-                <span>Burned Area</span>
+                <span>{t.burnedArea}</span>
               </button>
             </div>
 
@@ -195,7 +195,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-orange-400" />
-            <span>Layers</span>
+            <span>{t.layersLabel}</span>
           </button>
         </div>
 
