@@ -2,11 +2,18 @@ import { FireIncident } from '../types/fire';
 
 export async function fetchUSIncidents(): Promise<FireIncident[]> {
   try {
-    // Dynamic Query to official NIFC (National Interagency Fire Center) WFIGS Current Incidents Feature Server
-    const url = 'https://services3.arcgis.com/T4QDm6xTYFvWjybx/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,POOState,IncidentSize,PercentContained,POOProtectingAgency,IncidentTypeCategory,ModifiedOnDateTime_KG&outSR=4326&f=geojson';
+    // Valid ArcGIS REST query using standard simple parameters outFields=*
+    const url = 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson';
     const res = await fetch(url);
     if (res.ok) {
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        return [];
+      }
+
       if (data && data.features && data.features.length > 0) {
         const liveParsed: FireIncident[] = data.features
           .filter((f: any) => f.geometry && f.geometry.coordinates && f.geometry.coordinates.length >= 2)

@@ -41,7 +41,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [copiedLink, setCopiedLink] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const tzBadge = getTimezoneBadgeLabel(timezoneMode);
   const caIncidents = incidents.filter(i => i.country === 'CA');
   const usIncidents = incidents.filter(i => i.country === 'US');
 
@@ -76,9 +75,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   );
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 md:p-4 pointer-events-none flex flex-col md:flex-row md:items-center justify-between gap-2">
-      {/* Top Main Bar */}
-      <div className="flex items-center justify-between gap-2 w-full md:w-auto pointer-events-auto">
+    <header className="fixed top-0 left-0 right-0 z-[100] p-2 sm:p-3 md:p-4 pointer-events-none flex items-center justify-between gap-2">
+      {/* Left Group: Logo & Regional Totals Badge */}
+      <div className="flex items-center gap-2 pointer-events-auto flex-shrink-0">
         {/* Logo */}
         <div className="flamap-glass px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2.5 shadow-xl flex-shrink-0">
           <div className="flex items-center -space-x-1">
@@ -94,12 +93,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Consolidated Regional Burn Badge with Flags (Desktop) */}
-        <div className="hidden lg:flex items-center gap-2">
-          <div className="flamap-glass px-3.5 py-2 rounded-xl text-xs flex items-center gap-3">
+        {/* Consolidated Regional Burn Badge with Flags (Desktop & Laptop) */}
+        <div className="hidden sm:flex items-center gap-2">
+          <div className="flamap-glass px-3 py-2 rounded-xl text-xs flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🇨🇦</span>
-              <span className="font-semibold text-slate-100">
+              <span className="font-semibold text-slate-100 whitespace-nowrap">
                 {unitSystem === 'metric'
                   ? `${formatNumber(caTotalHa)} ha`
                   : `${formatNumber(Math.round(caTotalHa * 2.47105))} acres`}
@@ -108,7 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-slate-600 font-bold">•</span>
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🇺🇸</span>
-              <span className="font-semibold text-slate-100">
+              <span className="font-semibold text-slate-100 whitespace-nowrap">
                 {unitSystem === 'metric'
                   ? `${formatNumber(Math.round(usTotalAcres * 0.404686))} ha`
                   : `${formatNumber(usTotalAcres)} acres`}
@@ -116,8 +115,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Action Buttons (Search toggle & Hamburger) */}
+      {/* Right Group: Search, Evacuations, Share, Settings */}
+      <div className="pointer-events-auto flex items-center gap-2">
+        {/* Mobile Hamburger & Evac Button */}
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={onToggleEvacuations}
@@ -143,126 +145,125 @@ export const Navbar: React.FC<NavbarProps> = ({
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
-      </div>
 
-      {/* Desktop Bar Tools & Mobile Expandable Drawer */}
-      <div className={`pointer-events-auto flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto ${
-        mobileMenuOpen ? 'flex bg-[#0f1115]/95 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-2xl mt-1' : 'hidden md:flex'
-      }`}>
-        {/* Search */}
-        <div className="relative flex-1 md:w-56 lg:w-64">
-          <div className="flamap-glass rounded-xl flex items-center px-3 py-2 border border-white/10 focus-within:border-orange-500/50 transition">
-            <Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder={t.searchPlaceholder}
-              className="bg-transparent text-xs text-white placeholder-slate-400 outline-none w-full"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSearchResults(true);
-              }}
-              onFocus={() => setShowSearchResults(true)}
-            />
+        {/* Desktop Bar Tools & Mobile Expandable Drawer */}
+        <div className={`flex-col md:flex-row items-stretch md:items-center gap-2 ${
+          mobileMenuOpen ? 'flex absolute top-full left-2 right-2 bg-[#0f1115]/95 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-2xl mt-1' : 'hidden md:flex'
+        }`}>
+          {/* Search */}
+          <div className="relative md:w-56 lg:w-64">
+            <div className="flamap-glass rounded-xl flex items-center px-3 py-2 border border-white/10 focus-within:border-orange-500/50 transition">
+              <Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder={t.searchPlaceholder}
+                className="bg-transparent text-xs text-white placeholder-slate-400 outline-none w-full"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearchResults(true);
+                }}
+                onFocus={() => setShowSearchResults(true)}
+              />
+            </div>
+
+            {/* Autocomplete Dropdown */}
+            {showSearchResults && searchQuery.trim() !== '' && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 flamap-glass rounded-xl p-2 shadow-2xl max-h-64 overflow-y-auto border border-white/15 z-50">
+                {matchingIncidents.length === 0 && matchingLocations.length === 0 ? (
+                  <div className="text-xs text-slate-400 p-2 text-center">{t.noResults}</div>
+                ) : (
+                  <>
+                    {matchingIncidents.map((inc) => (
+                      <button
+                        key={inc.id}
+                        className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-200 transition"
+                        onClick={() => {
+                          onSelectIncidentOrLocation({ lat: inc.latitude, lng: inc.longitude, zoom: 10, name: inc.name });
+                          setShowSearchResults(false);
+                          setSearchQuery('');
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Flame className="w-3.5 h-3.5 text-orange-400" />
+                          <span className="font-medium text-white">{inc.name}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{inc.provinceOrState} ({inc.country})</span>
+                      </button>
+                    ))}
+                    {matchingLocations.map((loc) => (
+                      <button
+                        key={loc.name}
+                        className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-300 transition"
+                        onClick={() => {
+                          onSelectIncidentOrLocation(loc);
+                          setShowSearchResults(false);
+                          setSearchQuery('');
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-3.5 h-3.5 text-blue-400" />
+                          <span>{loc.name}</span>
+                        </div>
+                        <ArrowUpRight className="w-3 h-3 text-slate-400" />
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Autocomplete Dropdown */}
-          {showSearchResults && searchQuery.trim() !== '' && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 flamap-glass rounded-xl p-2 shadow-2xl max-h-64 overflow-y-auto border border-white/15 z-50">
-              {matchingIncidents.length === 0 && matchingLocations.length === 0 ? (
-                <div className="text-xs text-slate-400 p-2 text-center">{t.noResults}</div>
-              ) : (
-                <>
-                  {matchingIncidents.map((inc) => (
-                    <button
-                      key={inc.id}
-                      className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-200 transition"
-                      onClick={() => {
-                        onSelectIncidentOrLocation({ lat: inc.latitude, lng: inc.longitude, zoom: 10, name: inc.name });
-                        setShowSearchResults(false);
-                        setSearchQuery('');
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Flame className="w-3.5 h-3.5 text-orange-400" />
-                        <span className="font-medium text-white">{inc.name}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400">{inc.provinceOrState} ({inc.country})</span>
-                    </button>
-                  ))}
-                  {matchingLocations.map((loc) => (
-                    <button
-                      key={loc.name}
-                      className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-300 transition"
-                      onClick={() => {
-                        onSelectIncidentOrLocation(loc);
-                        setShowSearchResults(false);
-                        setSearchQuery('');
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-3.5 h-3.5 text-blue-400" />
-                        <span>{loc.name}</span>
-                      </div>
-                      <ArrowUpRight className="w-3 h-3 text-slate-400" />
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
-        </div>
+          {/* Action Controls Group */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Evacuation Desktop Button */}
+            <button
+              onClick={() => {
+                onToggleEvacuations();
+                setMobileMenuOpen(false);
+              }}
+              className={`hidden md:flex flamap-glass px-3 py-2 rounded-xl text-xs font-medium items-center gap-2 transition ${
+                showEvacuationDrawer || alerts.length > 0
+                  ? 'border-red-500/50 bg-red-500/10 text-red-300'
+                  : 'text-slate-300 hover:bg-white/10'
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4 text-red-400" />
+              <span>{t.evacuations}</span>
+              <span className="bg-red-500/30 text-red-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                {alerts.length}
+              </span>
+            </button>
 
-        {/* Action Controls Group */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Evacuation Desktop Button */}
-          <button
-            onClick={() => {
-              onToggleEvacuations();
-              setMobileMenuOpen(false);
-            }}
-            className={`hidden md:flex flamap-glass px-3 py-2 rounded-xl text-xs font-medium items-center gap-2 transition ${
-              showEvacuationDrawer || alerts.length > 0
-                ? 'border-red-500/50 bg-red-500/10 text-red-300'
-                : 'text-slate-300 hover:bg-white/10'
-            }`}
-          >
-            <ShieldAlert className="w-4 h-4 text-red-400" />
-            <span>{t.evacuations}</span>
-            <span className="bg-red-500/30 text-red-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-              {alerts.length}
-            </span>
-          </button>
+            {/* Share */}
+            <button
+              onClick={handleShareMapLink}
+              className={`flex-1 md:flex-none justify-center flamap-glass px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
+                copiedLink
+                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                  : 'text-slate-200 hover:bg-white/10'
+              }`}
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-orange-400" />}
+              <span>{copiedLink ? 'Copied!' : 'Share'}</span>
+            </button>
 
-          {/* Share */}
-          <button
-            onClick={handleShareMapLink}
-            className={`flex-1 md:flex-none justify-center flamap-glass px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
-              copiedLink
-                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                : 'text-slate-200 hover:bg-white/10'
-            }`}
-          >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-orange-400" />}
-            <span>{copiedLink ? 'Copied!' : 'Share'}</span>
-          </button>
-
-          {/* Settings */}
-          <button
-            onClick={() => {
-              onOpenSettings();
-              setMobileMenuOpen(false);
-            }}
-            className="flamap-glass p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition border border-white/10"
-            title="Open Settings & Credits"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+            {/* Settings */}
+            <button
+              onClick={() => {
+                onOpenSettings();
+                setMobileMenuOpen(false);
+              }}
+              className="flamap-glass p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition border border-white/10"
+              title="Open Settings & Credits"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </header>
   );
 };
-

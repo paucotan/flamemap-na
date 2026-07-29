@@ -21,6 +21,8 @@ interface TimelineControlProps {
   onSelectMapStyle: (style: MapStyleMode) => void;
   layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality: boolean };
   onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke' | 'airQuality') => void;
+  statusFilter: { outOfControl: boolean; beingMonitored: boolean; underControl: boolean };
+  onToggleStatusFilter: (statusKey: 'outOfControl' | 'beingMonitored' | 'underControl') => void;
   onToggleDataUpdates: () => void;
 }
 
@@ -39,6 +41,8 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   onSelectMapStyle,
   layers,
   onToggleLayer,
+  statusFilter,
+  onToggleStatusFilter,
   onToggleDataUpdates,
 }) => {
   const t = TRANSLATIONS[lang];
@@ -92,8 +96,8 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   ];
 
   return (
-    <div className="absolute bottom-3 sm:bottom-7 left-2 sm:left-4 right-2 sm:right-4 z-30 pointer-events-none flex flex-col md:flex-row items-stretch md:items-end justify-between gap-2.5 sm:gap-4">
-      {/* Mobile Floating Drawer Popups (Legend or Layers - Positioned cleanly as an overlay above controls) */}
+    <div className="absolute bottom-3 sm:bottom-7 left-2 sm:left-4 right-2 sm:right-4 z-30 pointer-events-none flex flex-col md:flex-row md:items-end justify-between gap-2.5 sm:gap-4">
+      {/* Mobile Floating Drawer Popups */}
       <div className="pointer-events-auto w-full md:hidden">
         {showLegendMobile && (
           <div className="flamap-glass p-3 rounded-2xl w-full border border-white/20 shadow-2xl mb-2 animate-in slide-in-from-bottom-2 duration-150">
@@ -429,6 +433,51 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         </div>
 
         <div className="grid grid-cols-2 md:flex md:flex-col gap-1.5 w-full">
+          {/* Incident Status Filters Sub-Panel */}
+          <div className="col-span-2 flex flex-col gap-1 bg-black/40 p-1.5 rounded-xl border border-white/10 mb-0.5">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Fire Status Filter</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onToggleStatusFilter('outOfControl')}
+                className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition border ${
+                  statusFilter.outOfControl
+                    ? 'bg-red-500/25 text-red-300 border-red-500/60 shadow-sm'
+                    : 'bg-black/30 text-slate-500 border-transparent opacity-40 hover:opacity-70'
+                }`}
+                title="Toggle Out of Control Fires"
+              >
+                <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_#ef4444]" />
+                <span>Out of Control</span>
+              </button>
+
+              <button
+                onClick={() => onToggleStatusFilter('beingMonitored')}
+                className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition border ${
+                  statusFilter.beingMonitored
+                    ? 'bg-orange-500/25 text-orange-300 border-orange-500/60 shadow-sm'
+                    : 'bg-black/30 text-slate-500 border-transparent opacity-40 hover:opacity-70'
+                }`}
+                title="Toggle Monitored / Held Fires"
+              >
+                <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_#f97316]" />
+                <span>Monitored</span>
+              </button>
+
+              <button
+                onClick={() => onToggleStatusFilter('underControl')}
+                className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition border ${
+                  statusFilter.underControl
+                    ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/60 shadow-sm'
+                    : 'bg-black/30 text-slate-500 border-transparent opacity-40 hover:opacity-70'
+                }`}
+                title="Toggle Under Control Fires"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#22c55e]" />
+                <span>Contained</span>
+              </button>
+            </div>
+          </div>
+
           <button
             onClick={() => onToggleLayer('hotspots')}
             className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition ${

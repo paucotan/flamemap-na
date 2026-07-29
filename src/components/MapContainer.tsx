@@ -182,23 +182,46 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         type: 'circle',
         source: 'all-incidents-source',
         paint: {
+          // Dynamic radius proportional to fire acreage and zoom level
           'circle-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            3, 5,
-            10, 10
+            3, [
+              'case',
+              ['boolean', ['get', 'isFireOfNote'], false], 9,
+              ['>', ['get', 'acres'], 50000], 8,
+              ['>', ['get', 'acres'], 10000], 6,
+              ['>', ['get', 'acres'], 1000], 4.5,
+              3
+            ],
+            9, [
+              'case',
+              ['boolean', ['get', 'isFireOfNote'], false], 16,
+              ['>', ['get', 'acres'], 50000], 14,
+              ['>', ['get', 'acres'], 10000], 11,
+              ['>', ['get', 'acres'], 1000], 8,
+              5
+            ]
           ],
           'circle-color': [
             'match',
             ['get', 'status'],
-            'Out of Control', '#ef4444',
-            'Active', '#f97316',
-            'Under Control', '#22c55e',
-            '#eab308'
+            'Out of Control', '#ef4444', // Red
+            'Being Monitored', '#f97316', // Orange
+            'Under Control', '#22c55e',   // Green
+            '#eab308'                      // Yellow fallback
           ],
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': 1.2,
+          'circle-stroke-color': [
+            'case',
+            ['boolean', ['get', 'isFireOfNote'], false], '#fde047', // Yellow accent for Fires of Note
+            '#ffffff'
+          ],
+          'circle-stroke-width': [
+            'case',
+            ['boolean', ['get', 'isFireOfNote'], false], 2.5,
+            1.2
+          ],
           'circle-opacity': 0.90
         }
       });
@@ -456,62 +479,82 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             id: inc.id,
             name: inc.name,
             status: inc.status,
-            acres: inc.acresBurned
+            acres: inc.acresBurned,
+            isFireOfNote: inc.agency.includes('Wildfire of Note')
           }
         }))
       });
     }
   }, [incidents, mapLoaded]);
 
-  // Update Prominent High-Contrast HTML City & Major Fire Region Badges (>1000 acres)
+  // Update Dynamic Incident Badges & Clean Labels based on zoom level and Fire of Note status
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
 
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
+    const renderMarkers = () => {
+      markersRef.current.forEach(m => m.remove());
+      markersRef.current = [];
 
-    if (!layers.hotspots) return;
+      if (!layers.hotspots) return;
 
-    // Filter to major fire complexes for prominent HTML Pill Badges to avoid overlap
-    const isMobile = window.innerWidth < 768;
-    const majorIncidents = incidents.filter(i => isMobile ? i.acresBurned > 15000 : (i.acresBurned > 1000 || i.status === 'Out of Control'));
+      const currentZoom = map.getZoom();
 
-    majorIncidents.forEach(inc => {
-      const el = document.createElement('div');
-      el.className = 'flamap-region-pill';
-      el.innerHTML = `
-        <div style="
-          background: rgba(15, 17, 21, 0.92);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.7);
-          border-radius: 9999px;
-          padding: ${isMobile ? '2px 7px' : '4px 10px'};
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          cursor: pointer;
-          transition: transform 0.15s ease;
-        ">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: #ff5722; box-shadow: 0 0 6px #ff5722; display: inline-block;"></span>
-          <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: ${isMobile ? '9px' : '11px'}; color: #ffffff; letter-spacing: -0.01em; white-space: nowrap;">
-            ${inc.name}
-          </span>
-          ${!isMobile ? `<span style="font-size: 10px; font-weight: 500; color: #94a3b8; font-family: 'Outfit', sans-serif;">${inc.provinceOrState}</span>` : ''}
-        </div>
-      `;
-
-      el.addEventListener('click', () => {
-        onSelectIncident(inc);
+      // Show text pills for:
+      // - Zoom >= 8.5: All active incidents
+      // - Zoom between 6.5 and 8.5: Only Wildfires of Note or massive fires (> 25,000 acres)
+      // - Zoom < 6.5: NO text pills at all (clean dot map view)
+      const visibleIncidents = incidents.filter(inc => {
+        if (currentZoom >= 8.5) return true;
+        if (currentZoom >= 6.5) {
+          return inc.agency.includes('Wildfire of Note') || inc.acresBurned > 25000;
+        }
+        return false; // Completely clean dot-only view when zoomed out at country/continental scale
       });
 
-      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([inc.longitude, inc.latitude])
-        .addTo(map);
+      visibleIncidents.forEach(inc => {
+        const isFireOfNote = inc.agency.includes('Wildfire of Note');
+        const el = document.createElement('div');
+        el.className = 'flamap-region-pill';
+        el.innerHTML = `
+          <div style="
+            background: rgba(15, 17, 21, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid ${isFireOfNote ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 255, 255, 0.2)'};
+            box-shadow: 0 4px 16px ${isFireOfNote ? 'rgba(239, 68, 68, 0.4)' : 'rgba(0,0,0,0.7)'};
+            border-radius: 9999px;
+            padding: 3px 9px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+          ">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isFireOfNote ? '#ef4444' : '#ff5722'}; box-shadow: 0 0 6px ${isFireOfNote ? '#ef4444' : '#ff5722'}; display: inline-block;"></span>
+            <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 11px; color: #ffffff; letter-spacing: -0.01em; white-space: nowrap;">
+              ${inc.name}
+            </span>
+          </div>
+        `;
 
-      markersRef.current.push(marker);
-    });
+        el.addEventListener('click', () => {
+          onSelectIncident(inc);
+        });
+
+        const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([inc.longitude, inc.latitude])
+          .addTo(map);
+
+        markersRef.current.push(marker);
+      });
+    };
+
+    renderMarkers();
+    map.on('zoomend', renderMarkers);
+
+    return () => {
+      map.off('zoomend', renderMarkers);
+    };
   }, [incidents, mapLoaded, layers.hotspots, onSelectIncident]);
 
   // Render Air Quality Index (AQI) Station Badges

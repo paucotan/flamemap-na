@@ -84,6 +84,19 @@ export function App() {
     airQuality: true,
   });
 
+  const [statusFilter, setStatusFilter] = useState({
+    outOfControl: true,
+    beingMonitored: true,
+    underControl: true,
+  });
+
+  const handleToggleStatusFilter = (statusKey: 'outOfControl' | 'beingMonitored' | 'underControl') => {
+    setStatusFilter(prev => ({
+      ...prev,
+      [statusKey]: !prev[statusKey]
+    }));
+  };
+
   useEffect(() => {
     async function loadAllData() {
       const { hotspots: loadedHotspots, logs } = await fetchHotspots();
@@ -150,7 +163,12 @@ export function App() {
       {/* Main Map Engine Viewport */}
       <MapContainer
         hotspots={hotspots}
-        incidents={incidents}
+        incidents={incidents.filter(inc => {
+          if (inc.status === 'Out of Control' && !statusFilter.outOfControl) return false;
+          if (inc.status === 'Being Monitored' && !statusFilter.beingMonitored) return false;
+          if (inc.status === 'Under Control' && !statusFilter.underControl) return false;
+          return true;
+        })}
         alerts={alerts}
         windPoints={windPoints}
         aqiStations={aqiStations}
@@ -182,6 +200,8 @@ export function App() {
         onSelectMapStyle={handleSelectMapStyle}
         layers={layers}
         onToggleLayer={handleToggleLayer}
+        statusFilter={statusFilter}
+        onToggleStatusFilter={handleToggleStatusFilter}
         onToggleDataUpdates={() => setShowDataUpdatesDrawer((prev) => !prev)}
       />
 

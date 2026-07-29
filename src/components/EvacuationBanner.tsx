@@ -43,20 +43,34 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
     return `${days}d ago`;
   };
 
-  // Sort alerts chronologically: Most recent emergency notifications first
-  const sortedAlerts = [...alerts].sort((a, b) => {
+  const [activeTab, setActiveTab] = useState<'all' | 'orders' | 'alerts' | 'roads'>('all');
+
+  // Filter & sort alerts chronologically: Most recent emergency notifications first
+  const filteredAlerts = alerts.filter(alert => {
+    const isRoad = alert.titleEn.includes('ROAD CLOSURE') || alert.authorityName.includes('DriveBC');
+    if (activeTab === 'orders') return alert.type === 'Order' && !isRoad;
+    if (activeTab === 'alerts') return alert.type === 'Warning' && !isRoad;
+    if (activeTab === 'roads') return isRoad;
+    return true;
+  });
+
+  const sortedAlerts = [...filteredAlerts].sort((a, b) => {
     const timeA = new Date(a.issuedAt).getTime() || 0;
     const timeB = new Date(b.issuedAt).getTime() || 0;
     return timeB - timeA;
   });
 
+  const countOrders = alerts.filter(a => a.type === 'Order' && !a.titleEn.includes('ROAD CLOSURE') && !a.authorityName.includes('DriveBC')).length;
+  const countAlerts = alerts.filter(a => a.type === 'Warning' && !a.titleEn.includes('ROAD CLOSURE') && !a.authorityName.includes('DriveBC')).length;
+  const countRoads = alerts.filter(a => a.titleEn.includes('ROAD CLOSURE') || a.authorityName.includes('DriveBC')).length;
+
   return (
     <div className="absolute top-16 sm:top-20 right-2 sm:right-4 z-40 w-96 max-w-[calc(100vw-1rem)] flamap-glass rounded-2xl p-3.5 sm:p-4 shadow-2xl border border-red-500/40">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
+      <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
         <div className="flex items-center gap-2 text-red-400 font-semibold text-sm font-['Outfit']">
           <ShieldAlert className="w-5 h-5 animate-pulse flex-shrink-0" />
-          <span>{t.evacuations} ({sortedAlerts.length})</span>
+          <span>{t.evacuations} ({alerts.length})</span>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -75,6 +89,49 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+      </div>
+
+      {/* Category Tabs (All, Orders, Alerts, Roads) */}
+      <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10 mb-2.5">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+            activeTab === 'all' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span>All</span>
+          <span className="text-[9px] opacity-75">({alerts.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('orders')}
+          className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+            activeTab === 'orders' ? 'bg-red-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span>🚨 Orders</span>
+          <span className="text-[9px] opacity-75">({countOrders})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('alerts')}
+          className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+            activeTab === 'alerts' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span>⚠️ Alerts</span>
+          <span className="text-[9px] opacity-75">({countAlerts})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('roads')}
+          className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 ${
+            activeTab === 'roads' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span>🚧 Roads</span>
+          <span className="text-[9px] opacity-75">({countRoads})</span>
+        </button>
       </div>
 
       {/* Live Feed Status Bar */}
