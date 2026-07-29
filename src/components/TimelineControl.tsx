@@ -50,7 +50,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
   const [showLegendMobile, setShowLegendMobile] = useState(false);
   const [showWindModal, setShowWindModal] = useState(false);
 
-  const baseDate = new Date('2026-07-28T17:46:00Z');
+  const baseDate = new Date();
   const activeDate = new Date(baseDate.getTime() - currentAgeHours * 3600 * 1000);
 
   const formattedDateString = formatTimestampWithTimezone(

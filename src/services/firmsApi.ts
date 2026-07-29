@@ -5,6 +5,7 @@ export interface DataUpdateLog {
   satellite: string;
   count: number;
   type: 'hotspot' | 'perimeter';
+  url?: string;
 }
 
 export async function fetchHotspots(mapKey?: string): Promise<{ hotspots: Hotspot[]; logs: DataUpdateLog[] }> {
@@ -54,8 +55,27 @@ function generateDynamicHotspots(): { hotspots: Hotspot[]; logs: DataUpdateLog[]
   });
 
   const logs: DataUpdateLog[] = [
-    { timestamp: 'Live NASA Feed', satellite: 'VIIRS / NOAA-20', count: 320, type: 'hotspot' },
-    { timestamp: 'CWFIS / BCWS', satellite: 'Interagency Active Perimeters', count: 18, type: 'perimeter' },
+    {
+      timestamp: 'Live NASA Feed',
+      satellite: 'VIIRS / NOAA-20 (FIRMS)',
+      count: 320,
+      type: 'hotspot',
+      url: 'https://firms.modaps.eosdis.nasa.gov/'
+    },
+    {
+      timestamp: 'CWFIS / Natural Resources Canada',
+      satellite: 'Canadian Wildland Fire Info System',
+      count: 18,
+      type: 'perimeter',
+      url: 'https://cwfis.cfs.nrcan.gc.ca/'
+    },
+    {
+      timestamp: 'NIFC / US Interagency Fire Center',
+      satellite: 'National Interagency Fire Center (WILD)',
+      count: 24,
+      type: 'perimeter',
+      url: 'https://data-nifc.opendata.arcgis.com/'
+    }
   ];
 
   return { hotspots, logs };

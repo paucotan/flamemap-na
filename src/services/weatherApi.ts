@@ -95,4 +95,115 @@ export async function fetchWindGrid(
 
   return points;
 }
+export interface SmokeGridPoint {
+  latitude: number;
+  longitude: number;
+  pm25: number;
+}
 
+const COPERNICUS_CACHE_KEY = 'flamemap_copernicus_cache';
+const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 Minutes
+
+interface CachedCopernicusData {
+  timestamp: number;
+  grid: SmokeGridPoint[];
+}
+
+export async function fetchCopernicusSmokeGrid(
+  fireLocations?: Array<{ latitude: number; longitude: number; priority?: number }>
+): Promise<SmokeGridPoint[]> {
+  try {
+    // 1. Check LocalStorage Cache (valid for 30 minutes)
+    const cachedStr = localStorage.getItem(COPERNICUS_CACHE_KEY);
+    if (cachedStr) {
+      try {
+        const cached: CachedCopernicusData = JSON.parse(cachedStr);
+        if (Date.now() - cached.timestamp < CACHE_DURATION_MS && cached.grid.length > 0) {
+          return cached.grid;
+        }
+      } catch {
+        localStorage.removeItem(COPERNICUS_CACHE_KEY);
+      }
+    }
+
+    const fallbackLocations = [
+      { latitude: 50.85, longitude: -121.38 }, // Shetland Creek / BC
+      { latitude: 49.86, longitude: -121.44 }, // Fraser Canyon / BC
+      { latitude: 40.08, longitude: -121.65 }, // Park Fire / CA
+      { latitude: 44.42, longitude: -117.45 }, // Durkee Fire / OR
+      { latitude: 44.65, longitude: -63.57 },  // NS
+    ];
+
+    let baseLocs = fireLocations && fireLocations.length > 0 ? fireLocations : fallbackLocations;
+
+    // Filter down to unique 0.25-degree grid centers so we cover major fires without duplicate queries
+    const uniqueLocationsMap = new Map<string, { latitude: number; longitude: number }>();
+    baseLocs.forEach(loc => {
+      const key = `${(Math.round(loc.latitude * 4) / 4).toFixed(2)},${(Math.round(loc.longitude * 4) / 4).toFixed(2)}`;
+      if (!uniqueLocationsMap.has(key)) {
+        uniqueLocationsMap.set(key, loc);
+      }
+    });
+
+    // Take top 40 major fire clusters
+    const topTargets = Array.from(uniqueLocationsMap.values()).slice(0, 40);
+
+    // Generate surrounding plume points for each major fire
+    const sampleTargets: Array<{ latitude: number; longitude: number }> = [];
+    const offsets = [
+      { dLat: 0, dLng: 0 },
+      { dLat: 0.25, dLng: 0.25 },
+      { dLat: -0.25, dLng: 0.25 },
+    ];
+
+    topTargets.forEach(loc => {
+      offsets.forEach(off => {
+        sampleTargets.push({
+          latitude: Math.round((loc.latitude + off.dLat) * 100) / 100,
+          longitude: Math.round((loc.longitude + off.dLng) * 100) / 100,
+        });
+      });
+    });
+
+    // 2. Open-Meteo Multi-Coordinate Batching (Queries all coordinates in 1 single HTTP GET request!)
+    const latsStr = sampleTargets.map(t => t.latitude.toFixed(2)).join(',');
+    const lngsStr = sampleTargets.map(t => t.longitude.toFixed(2)).join(',');
+
+    const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latsStr}&longitude=${lngsStr}&current=pm2_5`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Open-Meteo Air Quality batch error');
+
+    const dataArray = await res.json();
+    const grid: SmokeGridPoint[] = [];
+
+    // Response can be array of results when querying multi-coordinates
+    const results = Array.isArray(dataArray) ? dataArray : [dataArray];
+
+    results.forEach((item: any, idx: number) => {
+      const pm25 = item.current?.pm2_5 || 0;
+      const target = sampleTargets[idx] || sampleTargets[0];
+
+      if (pm25 >= 1.0) {
+        grid.push({
+          latitude: target.latitude,
+          longitude: target.longitude,
+          pm25: Math.min(1.0, Math.max(0.12, pm25 / 45))
+        });
+      }
+    });
+
+    // 3. Save result to cache (30 minutes)
+    if (grid.length > 0) {
+      const cachePayload: CachedCopernicusData = {
+        timestamp: Date.now(),
+        grid
+      };
+      localStorage.setItem(COPERNICUS_CACHE_KEY, JSON.stringify(cachePayload));
+    }
+
+    return grid;
+  } catch (err) {
+    console.warn('Failed to fetch Copernicus smoke grid:', err);
+    return [];
+  }
+}

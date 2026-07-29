@@ -17,8 +17,8 @@ interface NavbarProps {
   onOpenCredits: () => void;
   onToggleEvacuations: () => void;
   showEvacuationDrawer: boolean;
-  layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean };
-  onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke') => void;
+  layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality?: boolean };
+  onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke' | 'airQuality') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
