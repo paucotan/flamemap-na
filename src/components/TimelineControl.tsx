@@ -92,6 +92,69 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
 
   return (
     <div className="absolute bottom-3 sm:bottom-7 left-2 sm:left-4 right-2 sm:right-4 z-30 pointer-events-none flex flex-col md:flex-row items-stretch md:items-end justify-between gap-2.5 sm:gap-4">
+      {/* Mobile Floating Drawer Popups (Legend or Layers - Positioned cleanly above controls) */}
+      <div className="pointer-events-auto w-full md:hidden">
+        {showLegendMobile && (
+          <div className="flamap-glass p-3 rounded-2xl w-full border border-white/20 shadow-2xl mb-2 animate-in slide-in-from-bottom-2 duration-150">
+            <div className="flex items-center justify-between gap-1 mb-2 pb-1.5 border-b border-white/10">
+              <button
+                onClick={() => onToggleLayer('airQuality')}
+                className={`flex-1 py-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                  layers.airQuality ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Air Quality</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (layers.airQuality) onToggleLayer('airQuality');
+                  if (!layers.hotspots) onToggleLayer('hotspots');
+                }}
+                className={`flex-1 py-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                  !layers.airQuality ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-sm border border-amber-500/50 bg-[#1c1917]" />
+                <span>Burned Area</span>
+              </button>
+            </div>
+
+            {layers.airQuality ? (
+              <>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-xs font-semibold text-slate-200">US EPA / EC Scale</span>
+                  <span className="text-[10px] text-slate-400">AQI / AQHI</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="h-2.5 rounded-full w-full bg-gradient-to-r from-[#38bdf8] via-[#22c55e] via-[#eab308] via-[#f97316] to-[#e11d48]" />
+                  <div className="flex justify-between text-[10px] text-slate-300 font-medium px-0.5">
+                    <span className="text-sky-400 font-semibold">Good (0-50)</span>
+                    <span className="text-yellow-400 font-semibold">Moderate</span>
+                    <span className="text-rose-400 font-semibold">Hazardous (200+)</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-xs font-semibold text-slate-200">{t.burnedArea}</span>
+                  <span className="text-[10px] text-slate-400">effis / cwfis</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="h-2 rounded-full w-full bg-gradient-to-r from-[#451a03] via-[#ef4444] to-[#ffcc00]" />
+                  <div className="flex justify-between text-[10px] text-slate-400 font-medium px-0.5">
+                    <span>{t.daysAgo(5)}</span>
+                    <span>24 h</span>
+                    <span className="text-amber-400 font-semibold">{t.justNow}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Top Floating Controls on Mobile (Wind, Legend Toggle, Layers Toggle) */}
       <div className="pointer-events-auto flex items-center justify-between md:flex-col md:items-start gap-2">
         {/* Dynamic Viewport Wind Status Badge */}
@@ -136,10 +199,8 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
           </button>
         </div>
 
-        {/* Legend Box (Dynamic: Switches between Burned Area and Apple Maps AQI Index) */}
-        <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-64 max-w-[calc(100vw-2rem)] ${
-          showLegendMobile ? 'flex flex-col' : 'hidden md:flex flex-col'
-        }`}>
+        {/* Desktop Legend Box */}
+        <div className="flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-64 hidden md:flex md:flex-col">
           {/* Header & Explicit Toggle Pills */}
           <div className="flex items-center justify-between gap-1 mb-2 pb-1.5 border-b border-white/10">
             <button
@@ -176,8 +237,8 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
                 <div className="h-2.5 rounded-full w-full bg-gradient-to-r from-[#38bdf8] via-[#22c55e] via-[#eab308] via-[#f97316] to-[#e11d48]" />
                 <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-300 font-medium px-0.5 whitespace-nowrap">
                   <span className="text-sky-400 font-semibold">Good (0-50)</span>
-                  <span className="text-yellow-400 font-semibold">Mod</span>
-                  <span className="text-rose-400 font-semibold">Haz (200+)</span>
+                  <span className="text-yellow-400 font-semibold">Moderate</span>
+                  <span className="text-rose-400 font-semibold">Hazardous (200+)</span>
                 </div>
               </div>
             </>
