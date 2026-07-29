@@ -47,34 +47,24 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
           </a>
         </div>
 
-        {/* 100% Wildfire Relief Pledge */}
+        {/* Official Wildfire Relief */}
         <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 p-4 rounded-2xl mb-4">
           <div className="flex items-center gap-2 mb-1 text-emerald-300 font-bold text-xs uppercase tracking-wider">
             <HandHeart className="w-4 h-4 text-emerald-400" />
-            <span>100% Wildfire Relief Pledge</span>
+            <span>Support Official Wildfire Relief</span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed mb-3">
-            100% of all voluntary coffee contributions and donations are passed directly to official wildfire emergency relief efforts including <strong className="text-emerald-300">United Way BC Wildfires Campaign</strong>.
+            If you wish to help communities affected by wildfires, consider donating directly to the official <strong className="text-emerald-300">United Way BC Wildfire Campaign</strong>.
           </p>
           <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href="https://buymeacoffee.com/paucotan"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-xs text-amber-300 font-semibold transition border border-amber-500/30"
-            >
-              <Coffee className="w-3.5 h-3.5" />
-              <span>Support Relief (Buy Me a Coffee)</span>
-              <ExternalLink className="w-3 h-3 opacity-70" />
-            </a>
             <a
               href="https://uwbc.ca/campaign/wildfires/"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-xs text-emerald-300 font-semibold transition border border-emerald-500/30"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-xs text-emerald-300 font-semibold transition border border-emerald-500/30 shadow-sm"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>United Way BC Wildfires Fund ↗</span>
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Donate Directly to United Way BC Wildfire Fund ↗</span>
             </a>
           </div>
         </div>
