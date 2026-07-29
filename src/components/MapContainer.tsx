@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Hotspot, FireIncident, EvacuationAlert, WindPoint, UnitSystem, ViewportWind } from '../types/fire';
-import { getWindAtCoordinates } from '../services/weatherApi';
+import { getWindAtCoordinates, fetchLiveWindAtCoordinates } from '../services/weatherApi';
 
 interface MapContainerProps {
   hotspots: Hotspot[];
@@ -100,7 +100,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
 
-    const updateCenterAndHash = () => {
+    const updateCenterAndHash = async () => {
       const center = map.getCenter();
       const zoom = map.getZoom();
 
@@ -110,7 +110,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         `#map=${zoom.toFixed(2)}/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}`
       );
 
-      const localWind = getWindAtCoordinates(center.lat, center.lng);
+      const localWind = await fetchLiveWindAtCoordinates(center.lat, center.lng);
       onViewportWindChange(localWind);
     };
 

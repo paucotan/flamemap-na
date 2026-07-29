@@ -1,9 +1,33 @@
 import { WindPoint, ViewportWind } from '../types/fire';
 
+export async function fetchLiveWindAtCoordinates(lat: number, lng: number): Promise<ViewportWind> {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Open-Meteo API response error');
+
+    const data = await res.json();
+    const speedKmh = Math.round(data.current?.wind_speed_10m || 20);
+    const gustKmh = Math.round(data.current?.wind_gusts_10m || speedKmh * 1.4);
+    const directionDegrees = Math.round(data.current?.wind_direction_10m || 225);
+
+    return {
+      speedKmh,
+      speedMph: Math.round(speedKmh * 0.621371),
+      gustKmh,
+      gustMph: Math.round(gustKmh * 0.621371),
+      directionDegrees,
+    };
+  } catch (err) {
+    console.warn('Falling back to spatial wind model:', err);
+    return getWindAtCoordinates(lat, lng);
+  }
+}
+
 export function getWindAtCoordinates(lat: number, lng: number): ViewportWind {
-  // Spatial wind model based on North American geographical coordinates
-  const normX = Math.min(1, Math.max(0, (lng + 135) / 60)); // -135 (West Coast) to -75 (East Coast)
-  const normY = Math.min(1, Math.max(0, (65 - lat) / 25));   // 65 (North) to 40 (South)
+  // Spatial fallback wind model
+  const normX = Math.min(1, Math.max(0, (lng + 135) / 60));
+  const normY = Math.min(1, Math.max(0, (65 - lat) / 25));
 
   let dirDegrees = 225;
   let speedKmh = 22;
@@ -71,3 +95,4 @@ export async function fetchWindGrid(
 
   return points;
 }
+
