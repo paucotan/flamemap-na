@@ -339,32 +339,33 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         source: 'aqi-heatmap-source',
         maxzoom: 14,
         paint: {
-          'heatmap-weight': ['get', 'normalizedAqi'],
+          'heatmap-weight': 1.0,
           'heatmap-intensity': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            3, 1.2,
-            9, 2.2
+            3, 2.5,
+            9, 4.5
           ],
           'heatmap-color': [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
             0, 'rgba(0,0,0,0)',
-            0.15, 'rgba(56, 189, 248, 0.40)', // Blue (Good 1-3)
-            0.40, 'rgba(234, 179, 8, 0.55)',  // Yellow (Moderate 4-6)
-            0.65, 'rgba(249, 115, 22, 0.70)', // Orange (High 7-9)
-            1.00, 'rgba(225, 29, 72, 0.85)'   // Red/Crimson (Very High 10+)
+            0.10, 'rgba(56, 189, 248, 0.45)', // Sky Blue
+            0.35, 'rgba(34, 197, 94, 0.55)',  // Green
+            0.60, 'rgba(234, 179, 8, 0.70)',  // Yellow
+            0.80, 'rgba(249, 115, 22, 0.80)', // Orange
+            1.00, 'rgba(225, 29, 72, 0.90)'   // Crimson Red
           ],
           'heatmap-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            3, 80,
-            8, 180
+            3, 140,
+            9, 280
           ],
-          'heatmap-opacity': 0.60
+          'heatmap-opacity': 0.75
         }
       });
 
