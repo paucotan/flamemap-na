@@ -24,6 +24,8 @@ export async function fetchEvacuationAlerts(): Promise<EvacuationAlert[]> {
             const headline = ev.roads?.[0]?.name ? `${ev.roads[0].name} Road Closure` : 'Highway Emergency Alert';
             const cleanDesc = ev.description ? ev.description.replace(/\n/g, ' ') : 'Road closed due to active emergency incident.';
 
+            const issuedDate = ev.created_at || ev.updated_at || ev.created || ev.updated || new Date().toISOString();
+
             return {
               id: `drivebc-${ev.id || idx}`,
               titleEn: `ROAD CLOSURE (DriveBC) — ${headline}`,
@@ -32,7 +34,7 @@ export async function fetchEvacuationAlerts(): Promise<EvacuationAlert[]> {
               region: 'British Columbia',
               country: 'CA',
               affectedPopulationApprox: isFire ? 1500 : 500,
-              issuedAt: ev.updated || ev.created || new Date().toISOString(),
+              issuedAt: issuedDate,
               summaryEn: cleanDesc,
               summaryFr: cleanDesc,
               officialUrl: ev.url ? ev.url.replace('api.open511.gov.bc.ca/events', 'www.drivebc.ca') : 'https://www.drivebc.ca',

@@ -29,11 +29,26 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
   };
 
   const getRelativeTimeText = (dateString: string) => {
-    const diffMinutes = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 60000);
+    const parsedDate = new Date(dateString);
+    if (isNaN(parsedDate.getTime())) return 'Recently';
+
+    const diffMinutes = Math.floor((new Date().getTime() - parsedDate.getTime()) / 60000);
+    if (diffMinutes < 0) return 'Just now';
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
     const hours = Math.floor(diffMinutes / 60);
-    return `${hours}h ago`;
+    if (hours < 48) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   };
+
+  // Sort alerts chronologically: Most recent emergency notifications first
+  const sortedAlerts = [...alerts].sort((a, b) => {
+    const timeA = new Date(a.issuedAt).getTime() || 0;
+    const timeB = new Date(b.issuedAt).getTime() || 0;
+    return timeB - timeA;
+  });
 
   return (
     <div className="absolute top-16 sm:top-20 right-2 sm:right-4 z-40 w-96 max-w-[calc(100vw-1rem)] flamap-glass rounded-2xl p-3.5 sm:p-4 shadow-2xl border border-red-500/40">
@@ -41,7 +56,7 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
       <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-2.5">
         <div className="flex items-center gap-2 text-red-400 font-semibold text-sm font-['Outfit']">
           <ShieldAlert className="w-5 h-5 animate-pulse flex-shrink-0" />
-          <span>{t.evacuations} ({alerts.length})</span>
+          <span>{t.evacuations} ({sortedAlerts.length})</span>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -68,8 +83,8 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 z-10 bg-[#0f1115]/80 rounded-full" />
           <div className="overflow-hidden w-full relative">
             <div className="whitespace-nowrap animate-[marquee_12s_linear_infinite] hover:[animation-play-state:paused] inline-block">
-              <span>Live US & Canada Emergency Feeds (NOAA, CAL FIRE, Emergency Info BC, Alberta Emergency Alert) • </span>
-              <span>Live US & Canada Emergency Feeds (NOAA, CAL FIRE, Emergency Info BC, Alberta Emergency Alert) • </span>
+              <span>Live Emergency Feeds (DriveBC, Emergency Info BC, CAL FIRE, NIFC) • </span>
+              <span>Live Emergency Feeds (DriveBC, Emergency Info BC, CAL FIRE, NIFC) • </span>
             </div>
           </div>
         </div>
@@ -79,7 +94,7 @@ export const EvacuationBanner: React.FC<EvacuationBannerProps> = ({
       </div>
 
       <div className="space-y-3 max-h-[60vh] sm:max-h-96 overflow-y-auto pr-1">
-        {alerts.map((alert) => {
+        {sortedAlerts.map((alert) => {
           const title = lang === 'fr' ? alert.titleFr : alert.titleEn;
           const summary = lang === 'fr' ? alert.summaryFr : alert.summaryEn;
 
