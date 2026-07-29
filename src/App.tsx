@@ -24,10 +24,38 @@ import { fetchLiveAqiStations, AqiStation } from './services/aqiApi';
 import { MapStyleMode } from './components/TimelineControl';
 
 export function App() {
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
-  const [lang, setLang] = useState<Language>('en');
-  const [timezoneMode, setTimezoneMode] = useState<TimezoneMode>('auto');
-  const [mapStyle, setMapStyle] = useState<MapStyleMode>('satellite');
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>(() => {
+    return (localStorage.getItem('flamemap_unitSystem') as UnitSystem) || 'metric';
+  });
+  const [lang, setLang] = useState<Language>(() => {
+    return (localStorage.getItem('flamemap_lang') as Language) || 'en';
+  });
+  const [timezoneMode, setTimezoneMode] = useState<TimezoneMode>(() => {
+    return (localStorage.getItem('flamemap_timezoneMode') as TimezoneMode) || 'auto';
+  });
+  const [mapStyle, setMapStyle] = useState<MapStyleMode>(() => {
+    return (localStorage.getItem('flamemap_mapStyle') as MapStyleMode) || 'satellite';
+  });
+
+  const handleSelectUnitSystem = (sys: UnitSystem) => {
+    setUnitSystem(sys);
+    localStorage.setItem('flamemap_unitSystem', sys);
+  };
+
+  const handleSelectLanguage = (l: Language) => {
+    setLang(l);
+    localStorage.setItem('flamemap_lang', l);
+  };
+
+  const handleSelectTimezoneMode = (tz: TimezoneMode) => {
+    setTimezoneMode(tz);
+    localStorage.setItem('flamemap_timezoneMode', tz);
+  };
+
+  const handleSelectMapStyle = (style: MapStyleMode) => {
+    setMapStyle(style);
+    localStorage.setItem('flamemap_mapStyle', style);
+  };
 
   const [maxAgeHours, setMaxAgeHours] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -81,11 +109,11 @@ export function App() {
   }, []);
 
   const handleToggleUnitSystem = () => {
-    setUnitSystem((prev) => (prev === 'metric' ? 'imperial' : 'metric'));
+    handleSelectUnitSystem(unitSystem === 'metric' ? 'imperial' : 'metric');
   };
 
   const handleToggleLanguage = () => {
-    setLang((prev) => (prev === 'en' ? 'fr' : 'en'));
+    handleSelectLanguage(lang === 'en' ? 'fr' : 'en');
   };
 
   const handleSelectIncidentOrLocation = (item: { lat: number; lng: number; zoom?: number; name: string }) => {
@@ -151,7 +179,7 @@ export function App() {
         timezoneMode={timezoneMode}
         viewportWind={viewportWind}
         mapStyle={mapStyle}
-        onSelectMapStyle={(style) => setMapStyle(style)}
+        onSelectMapStyle={handleSelectMapStyle}
         layers={layers}
         onToggleLayer={handleToggleLayer}
         onToggleDataUpdates={() => setShowDataUpdatesDrawer((prev) => !prev)}
@@ -161,11 +189,11 @@ export function App() {
       {showSettingsModal && (
         <SettingsModal
           unitSystem={unitSystem}
-          onSelectUnitSystem={(sys) => setUnitSystem(sys)}
+          onSelectUnitSystem={handleSelectUnitSystem}
           lang={lang}
-          onSelectLanguage={(l) => setLang(l)}
+          onSelectLanguage={handleSelectLanguage}
           timezoneMode={timezoneMode}
-          onSelectTimezoneMode={(tz) => setTimezoneMode(tz)}
+          onSelectTimezoneMode={handleSelectTimezoneMode}
           onClose={() => setShowSettingsModal(false)}
           onOpenCredits={() => setShowCreditsModal(true)}
         />
@@ -209,7 +237,7 @@ export function App() {
 
       {/* Sources & Credits Modal */}
       {showCreditsModal && (
-        <CreditsModal onClose={() => setShowCreditsModal(false)} />
+        <CreditsModal lang={lang} onClose={() => setShowCreditsModal(false)} />
       )}
 
       {/* Vercel Web Analytics */}
