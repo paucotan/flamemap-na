@@ -11,6 +11,8 @@
 
 ## 🌟 Overview
 
+![FlameMap North America Interface](public/docs/app_preview.png)
+
 **FlameMap North America** is an open-source, citizen-centric platform providing real-time situational awareness of active wildfires across North America. Inspired by **[Flamap.fr](https://flamap.fr)** created by **[@GuillaumeRozier](https://x.com/GuillaumeRozier)** in France, FlameMap aggregates open satellite and emergency data from NASA, NIFC (US), CWFIS (Canada), Open-Meteo, and Environment Canada into a smooth, interactive 60 FPS experience.
 
 ---
