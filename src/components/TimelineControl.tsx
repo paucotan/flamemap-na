@@ -111,14 +111,22 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         {/* Mobile Toggles for Legend & Layers */}
         <div className="flex items-center gap-2 md:hidden">
           <button
-            onClick={() => setShowLegendMobile(!showLegendMobile)}
-            className="flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium text-slate-300 flex items-center gap-1 border border-white/10"
+            onClick={() => {
+              setShowLegendMobile(!showLegendMobile);
+              if (!showLegendMobile) setShowLayersMobile(false);
+            }}
+            className={`flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border ${
+              showLegendMobile ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'text-slate-300 border-white/10'
+            }`}
           >
-            <span>{t.burnedArea}</span>
+            <span>{layers.airQuality ? 'Air Quality' : t.burnedArea}</span>
             {showLegendMobile ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
           </button>
           <button
-            onClick={() => setShowLayersMobile(!showLayersMobile)}
+            onClick={() => {
+              setShowLayersMobile(!showLayersMobile);
+              if (!showLayersMobile) setShowLegendMobile(false);
+            }}
             className={`flamap-glass px-2.5 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1 border ${
               showLayersMobile ? 'bg-orange-500/20 text-orange-300 border-orange-500/40' : 'text-slate-300 border-white/10'
             }`}
@@ -129,7 +137,7 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
         </div>
 
         {/* Legend Box (Dynamic: Switches between Burned Area and Apple Maps AQI Index) */}
-        <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-64 ${
+        <div className={`flamap-glass p-2.5 sm:p-3 rounded-2xl w-full sm:w-64 max-w-[calc(100vw-2rem)] ${
           showLegendMobile ? 'flex flex-col' : 'hidden md:flex flex-col'
         }`}>
           {layers.airQuality ? (
@@ -144,10 +152,10 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
 
               <div className="space-y-1">
                 <div className="h-2.5 rounded-full w-full bg-gradient-to-r from-[#38bdf8] via-[#22c55e] via-[#eab308] via-[#f97316] to-[#e11d48]" />
-                <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-300 font-medium px-0.5">
+                <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-300 font-medium px-0.5 whitespace-nowrap">
                   <span className="text-sky-400 font-semibold">Good (0-50)</span>
-                  <span className="text-yellow-400 font-semibold">Moderate</span>
-                  <span className="text-rose-400 font-semibold">Hazardous (200+)</span>
+                  <span className="text-yellow-400 font-semibold">Mod</span>
+                  <span className="text-rose-400 font-semibold">Haz (200+)</span>
                 </div>
               </div>
             </>

@@ -7,8 +7,8 @@ interface CreditsModalProps {
 
 export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-      <div className="flamap-glass rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-white/20 relative animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-y-auto">
+      <div className="flamap-glass rounded-3xl p-5 md:p-8 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-white/20 relative animate-in fade-in zoom-in duration-200 my-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition"
