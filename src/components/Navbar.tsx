@@ -94,25 +94,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Regional Burn Badges (Desktop) */}
+        {/* Consolidated Regional Burn Badge with Flags (Desktop) */}
         <div className="hidden lg:flex items-center gap-2">
-          <div className="flamap-glass px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-slate-400 font-medium">{t.canadaTotal}</span>
-            <span className="font-semibold text-slate-100">
-              {unitSystem === 'metric'
-                ? `${formatNumber(caTotalHa)} ha`
-                : `${formatNumber(Math.round(caTotalHa * 2.47105))} acres`}
-            </span>
-          </div>
-          <div className="flamap-glass px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span className="text-slate-400 font-medium">{t.usaTotal}</span>
-            <span className="font-semibold text-slate-100">
-              {unitSystem === 'metric'
-                ? `${formatNumber(Math.round(usTotalAcres * 0.404686))} ha`
-                : `${formatNumber(usTotalAcres)} acres`}
-            </span>
+          <div className="flamap-glass px-3.5 py-2 rounded-xl text-xs flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">🇨🇦</span>
+              <span className="font-semibold text-slate-100">
+                {unitSystem === 'metric'
+                  ? `${formatNumber(caTotalHa)} ha`
+                  : `${formatNumber(Math.round(caTotalHa * 2.47105))} acres`}
+              </span>
+            </div>
+            <span className="text-slate-600 font-bold">•</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">🇺🇸</span>
+              <span className="font-semibold text-slate-100">
+                {unitSystem === 'metric'
+                  ? `${formatNumber(Math.round(usTotalAcres * 0.404686))} ha`
+                  : `${formatNumber(usTotalAcres)} acres`}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -216,25 +217,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Action Controls Group */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Share */}
-          <button
-            onClick={handleShareMapLink}
-            className={`flex-1 md:flex-none justify-center flamap-glass px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
-              copiedLink
-                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                : 'text-slate-200 hover:bg-white/10'
-            }`}
-          >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-orange-400" />}
-            <span>{copiedLink ? 'Copied!' : 'Share'}</span>
-          </button>
-
-          {/* Timezone Badge */}
-          <div className="flex-1 md:flex-none justify-center flamap-glass px-2.5 py-2 rounded-xl text-xs font-semibold text-cyan-300 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{tzBadge}</span>
-          </div>
-
           {/* Evacuation Desktop Button */}
           <button
             onClick={() => {
@@ -254,6 +236,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </button>
 
+          {/* Share */}
+          <button
+            onClick={handleShareMapLink}
+            className={`flex-1 md:flex-none justify-center flamap-glass px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
+              copiedLink
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                : 'text-slate-200 hover:bg-white/10'
+            }`}
+          >
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-orange-400" />}
+            <span>{copiedLink ? 'Copied!' : 'Share'}</span>
+          </button>
+
           {/* Settings */}
           <button
             onClick={() => {
@@ -261,21 +256,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               setMobileMenuOpen(false);
             }}
             className="flamap-glass p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition border border-white/10"
-            title="Open Settings"
+            title="Open Settings & Credits"
           >
             <Settings className="w-4 h-4" />
-          </button>
-
-          {/* Credits */}
-          <button
-            onClick={() => {
-              onOpenCredits();
-              setMobileMenuOpen(false);
-            }}
-            className="flamap-glass p-2.5 md:px-3 md:py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5"
-          >
-            <Heart className="w-4 h-4 text-rose-400 fill-rose-500/30" />
-            <span className="hidden lg:inline">{t.sourcesCredits}</span>
           </button>
         </div>
       </div>

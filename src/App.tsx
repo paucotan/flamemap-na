@@ -152,6 +152,7 @@ export function App() {
           timezoneMode={timezoneMode}
           onSelectTimezoneMode={(tz) => setTimezoneMode(tz)}
           onClose={() => setShowSettingsModal(false)}
+          onOpenCredits={() => setShowCreditsModal(true)}
         />
       )}
 

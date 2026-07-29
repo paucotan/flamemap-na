@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings, Clock, Globe, Scale, Check } from 'lucide-react';
+import { X, Settings, Clock, Globe, Scale, Check, Heart } from 'lucide-react';
 import { UnitSystem } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, getDetectedTimezone } from '../utils/timezone';
@@ -12,6 +12,7 @@ interface SettingsModalProps {
   timezoneMode: TimezoneMode;
   onSelectTimezoneMode: (tz: TimezoneMode) => void;
   onClose: () => void;
+  onOpenCredits?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -22,6 +23,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   timezoneMode,
   onSelectTimezoneMode,
   onClose,
+  onOpenCredits,
 }) => {
   const t = TRANSLATIONS[lang];
   const detectedTz = getDetectedTimezone();
@@ -155,6 +157,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {unitSystem === 'imperial' && <Check className="w-4 h-4 text-amber-400" />}
             </button>
           </div>
+        </div>
+
+        {/* 4. Sources & Credits Button */}
+        <div className="mb-6 border-t border-white/10 pt-4">
+          <button
+            onClick={() => {
+              onClose();
+              if (onOpenCredits) onOpenCredits();
+            }}
+            className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-rose-300 hover:text-white transition flex items-center justify-center gap-2"
+          >
+            <Heart className="w-4 h-4 text-rose-400 fill-rose-500/30" />
+            <span>{t.sourcesCredits} ↗</span>
+          </button>
         </div>
 
         <button
