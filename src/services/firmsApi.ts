@@ -37,7 +37,7 @@ function generateDynamicHotspots(): { hotspots: Hotspot[]; logs: DataUpdateLog[]
 
       const lat = cluster.lat + (randStdNormal * cluster.radius * 0.2);
       const lng = cluster.lng + (randStdNormal2 * cluster.radius * 0.2);
-      const ageHours = Math.round(Math.pow(Math.random(), 1.5) * 120 * 10) / 10;
+      const ageHours = Math.round(Math.pow(Math.random(), 1.4) * 200 * 10) / 10;
       const hotspotTime = new Date(now.getTime() - ageHours * 3600 * 1000);
 
       hotspots.push({

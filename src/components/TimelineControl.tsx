@@ -378,6 +378,10 @@ export const TimelineControl: React.FC<TimelineControlProps> = ({
               onChange={(e) => onChangeAgeHours(120 - parseFloat(e.target.value))}
               className="w-full h-2 sm:h-2.5 bg-slate-800/90 rounded-lg appearance-none cursor-pointer accent-orange-500"
             />
+            <div className="flex justify-between items-center text-[9px] sm:text-[10px] text-slate-400 font-medium px-1">
+              <span>{lang === 'fr' ? 'Il y a 5-7j (Cumulé)' : '5–7 Days Ago (Cumulative)'}</span>
+              <span className="text-amber-400/90 font-semibold">{lang === 'fr' ? 'En direct' : 'Live / Present'}</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-0.5 sm:gap-1 bg-white/5 p-0.5 sm:p-1 rounded-xl border border-white/10">

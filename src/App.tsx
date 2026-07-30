@@ -70,6 +70,7 @@ export function App() {
   const [viewportWind, setViewportWind] = useState<ViewportWind | undefined>(undefined);
 
   const [selectedIncident, setSelectedIncident] = useState<FireIncident | null>(null);
+  const [targetLocation, setTargetLocation] = useState<{ lat: number; lng: number; zoom?: number; name: string } | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState<boolean>(false);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [showEvacuationDrawer, setShowEvacuationDrawer] = useState<boolean>(false);
@@ -130,6 +131,7 @@ export function App() {
   };
 
   const handleSelectIncidentOrLocation = (item: { lat: number; lng: number; zoom?: number; name: string }) => {
+    setTargetLocation(item);
     const foundInc = incidents.find(i => i.name.toLowerCase().includes(item.name.toLowerCase()));
     if (foundInc) {
       setSelectedIncident(foundInc);
@@ -162,6 +164,7 @@ export function App() {
 
       {/* Main Map Engine Viewport */}
       <MapContainer
+        targetLocation={targetLocation}
         hotspots={hotspots}
         incidents={incidents.filter(inc => {
           if (inc.status === 'Out of Control' && !statusFilter.outOfControl) return false;

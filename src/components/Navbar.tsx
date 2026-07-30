@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Flame, ShieldAlert, Heart, Globe, ArrowUpRight, Settings, Clock, Share2, Check, Menu, X, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Flame, ShieldAlert, Heart, Globe, ArrowUpRight, Settings, Clock, Share2, Check, Menu, X, Layers, Loader2, MapPin } from 'lucide-react';
 import { UnitSystem, FireIncident, EvacuationAlert } from '../types/fire';
 import { Language, TRANSLATIONS } from '../utils/i18n';
 import { TimezoneMode, getTimezoneBadgeLabel } from '../utils/timezone';
@@ -21,6 +21,14 @@ interface NavbarProps {
   onToggleLayer: (layerName: 'hotspots' | 'perimeters' | 'wind' | 'evacuations' | 'smoke' | 'airQuality') => void;
 }
 
+interface GeocodedResult {
+  name: string;
+  sublabel: string;
+  lat: number;
+  lng: number;
+  zoom: number;
+}
+
 export const Navbar: React.FC<NavbarProps> = ({
   unitSystem,
   onToggleUnitSystem,
@@ -40,6 +48,54 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [geocodedResults, setGeocodedResults] = useState<GeocodedResult[]>([]);
+  const [isSearchingGeocode, setIsSearchingGeocode] = useState(false);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      setGeocodedResults([]);
+      setIsSearchingGeocode(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingGeocode(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=${encodeURIComponent(query)}`,
+          { headers: { 'Accept-Language': lang === 'fr' ? 'fr,en' : 'en' } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const parsed: GeocodedResult[] = data.map((item: any) => {
+            const addr = item.address || {};
+            const stateOrProv = addr.state || addr.province || addr.region || '';
+            const country = addr.country || '';
+            const countryCode = (addr.country_code || '').toUpperCase();
+            const flag = countryCode === 'CA' ? '🇨🇦' : (countryCode === 'US' ? '🇺🇸' : '📍');
+            const cityName = item.display_name.split(',')[0];
+            const sublabel = [stateOrProv, country].filter(Boolean).join(', ');
+
+            return {
+              name: `${flag} ${cityName}`,
+              sublabel,
+              lat: parseFloat(item.lat),
+              lng: parseFloat(item.lon),
+              zoom: 11,
+            };
+          });
+          setGeocodedResults(parsed);
+        }
+      } catch (e) {
+        console.warn('Geocoding search error:', e);
+      } finally {
+        setIsSearchingGeocode(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, lang]);
 
   const caIncidents = incidents.filter(i => i.country === 'CA');
   const usIncidents = incidents.filter(i => i.country === 'US');
@@ -73,6 +129,30 @@ export const Navbar: React.FC<NavbarProps> = ({
   const matchingLocations = searchLocations.filter(loc =>
     loc.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (matchingIncidents.length > 0) {
+        const topInc = matchingIncidents[0];
+        onSelectIncidentOrLocation({ lat: topInc.latitude, lng: topInc.longitude, zoom: 10, name: topInc.name });
+        setShowSearchResults(false);
+        setSearchQuery('');
+        setMobileMenuOpen(false);
+      } else if (geocodedResults.length > 0) {
+        const topLoc = geocodedResults[0];
+        onSelectIncidentOrLocation(topLoc);
+        setShowSearchResults(false);
+        setSearchQuery('');
+        setMobileMenuOpen(false);
+      } else if (matchingLocations.length > 0) {
+        const topLoc = matchingLocations[0];
+        onSelectIncidentOrLocation(topLoc);
+        setShowSearchResults(false);
+        setSearchQuery('');
+        setMobileMenuOpen(false);
+      }
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] p-2 sm:p-3 md:p-4 pointer-events-none flex items-center justify-between gap-2">
@@ -153,7 +233,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Search */}
           <div className="relative md:w-56 lg:w-64">
             <div className="flamap-glass rounded-xl flex items-center px-3 py-2 border border-white/10 focus-within:border-orange-500/50 transition">
-              <Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+              {isSearchingGeocode ? (
+                <Loader2 className="w-4 h-4 text-orange-400 mr-2 flex-shrink-0 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" />
+              )}
               <input
                 type="text"
                 placeholder={t.searchPlaceholder}
@@ -163,53 +247,98 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setSearchQuery(e.target.value);
                   setShowSearchResults(true);
                 }}
+                onKeyDown={handleKeyDown}
                 onFocus={() => setShowSearchResults(true)}
               />
             </div>
 
             {/* Autocomplete Dropdown */}
             {showSearchResults && searchQuery.trim() !== '' && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 flamap-glass rounded-xl p-2 shadow-2xl max-h-64 overflow-y-auto border border-white/15 z-50">
-                {matchingIncidents.length === 0 && matchingLocations.length === 0 ? (
+              <div className="absolute top-full left-0 right-0 mt-1.5 flamap-glass rounded-xl p-2 shadow-2xl max-h-72 overflow-y-auto border border-white/15 z-50">
+                {matchingIncidents.length === 0 && geocodedResults.length === 0 && matchingLocations.length === 0 && !isSearchingGeocode ? (
                   <div className="text-xs text-slate-400 p-2 text-center">{t.noResults}</div>
                 ) : (
                   <>
-                    {matchingIncidents.map((inc) => (
-                      <button
-                        key={inc.id}
-                        className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-200 transition"
-                        onClick={() => {
-                          onSelectIncidentOrLocation({ lat: inc.latitude, lng: inc.longitude, zoom: 10, name: inc.name });
-                          setShowSearchResults(false);
-                          setSearchQuery('');
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Flame className="w-3.5 h-3.5 text-orange-400" />
-                          <span className="font-medium text-white">{inc.name}</span>
+                    {/* Fire Incidents */}
+                    {matchingIncidents.length > 0 && (
+                      <div className="mb-1">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-orange-400 px-2 py-1">
+                          {t.activeFires}
                         </div>
-                        <span className="text-[10px] text-slate-400">{inc.provinceOrState} ({inc.country})</span>
-                      </button>
-                    ))}
-                    {matchingLocations.map((loc) => (
-                      <button
-                        key={loc.name}
-                        className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-300 transition"
-                        onClick={() => {
-                          onSelectIncidentOrLocation(loc);
-                          setShowSearchResults(false);
-                          setSearchQuery('');
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Globe className="w-3.5 h-3.5 text-blue-400" />
-                          <span>{loc.name}</span>
+                        {matchingIncidents.map((inc) => (
+                          <button
+                            key={inc.id}
+                            className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-200 transition"
+                            onClick={() => {
+                              onSelectIncidentOrLocation({ lat: inc.latitude, lng: inc.longitude, zoom: 10, name: inc.name });
+                              setShowSearchResults(false);
+                              setSearchQuery('');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <Flame className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                              <span className="font-medium text-white truncate">{inc.name}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 ml-2 flex-shrink-0">{inc.provinceOrState} ({inc.country})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Geocoded Universal Locations */}
+                    {geocodedResults.length > 0 && (
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-sky-400 px-2 py-1 border-t border-white/10 mt-1 pt-1.5">
+                          {lang === 'fr' ? 'Villes & Lieux' : 'Cities & Locations'}
                         </div>
-                        <ArrowUpRight className="w-3 h-3 text-slate-400" />
-                      </button>
-                    ))}
+                        {geocodedResults.map((loc, idx) => (
+                          <button
+                            key={`geo-${idx}-${loc.name}`}
+                            className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-200 transition"
+                            onClick={() => {
+                              onSelectIncidentOrLocation(loc);
+                              setShowSearchResults(false);
+                              setSearchQuery('');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <MapPin className="w-3.5 h-3.5 text-sky-400 flex-shrink-0" />
+                              <div className="truncate">
+                                <div className="font-medium text-white truncate">{loc.name}</div>
+                                {loc.sublabel && <div className="text-[10px] text-slate-400 truncate">{loc.sublabel}</div>}
+                              </div>
+                            </div>
+                            <ArrowUpRight className="w-3 h-3 text-slate-400 flex-shrink-0 ml-2" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Quick Preset Locations fallback if no geocoded results yet */}
+                    {geocodedResults.length === 0 && matchingLocations.length > 0 && (
+                      <div>
+                        {matchingLocations.map((loc) => (
+                          <button
+                            key={loc.name}
+                            className="w-full text-left p-2 rounded-lg hover:bg-white/10 text-xs flex items-center justify-between text-slate-300 transition"
+                            onClick={() => {
+                              onSelectIncidentOrLocation(loc);
+                              setShowSearchResults(false);
+                              setSearchQuery('');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Globe className="w-3.5 h-3.5 text-blue-400" />
+                              <span>{loc.name}</span>
+                            </div>
+                            <ArrowUpRight className="w-3 h-3 text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </>
                 )}
               </div>

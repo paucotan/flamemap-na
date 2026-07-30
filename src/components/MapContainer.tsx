@@ -8,6 +8,7 @@ import { Language } from '../utils/i18n';
 import { MapStyleMode } from './TimelineControl';
 
 interface MapContainerProps {
+  targetLocation?: { lat: number; lng: number; zoom?: number; name: string } | null;
   hotspots: Hotspot[];
   incidents: FireIncident[];
   alerts: EvacuationAlert[];
@@ -23,6 +24,7 @@ interface MapContainerProps {
 }
 
 export const MapContainer: React.FC<MapContainerProps> = ({
+  targetLocation,
   hotspots,
   incidents,
   alerts,
@@ -352,11 +354,11 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           ],
           'circle-color': [
             'step',
-            ['get', 'ageHours'],
+            ['get', 'relativeAgeHours'],
             '#ffcc00',
             24, '#ff3b30',
-            48, '#7c2d12',
-            120, '#3f3f46'
+            48, '#b45309',
+            120, '#475569'
           ],
           'circle-stroke-color': '#ffffff',
           'circle-stroke-width': 1,
@@ -629,6 +631,18 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     });
   }, [aqiStations, mapLoaded, layers.airQuality, lang]);
 
+  // Reactive FlyTo on Search or Location Selection
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded || !targetLocation) return;
+    mapRef.current.flyTo({
+      center: [targetLocation.lng, targetLocation.lat],
+      zoom: targetLocation.zoom || 11,
+      essential: true,
+      speed: 1.4,
+      curve: 1.25,
+    });
+  }, [targetLocation, mapLoaded]);
+
   // Reactive Hotspots GeoJSON update
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
@@ -651,6 +665,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             frp: h.frp,
             confidence: h.confidence,
             ageHours: h.ageHours,
+            relativeAgeHours: Math.max(0, h.ageHours - maxAgeHours),
             satellite: h.satellite
           }
         }))
