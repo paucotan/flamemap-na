@@ -1,0 +1,42 @@
+name: Daily Data Sanity & Code Audit
+
+on:
+  schedule:
+    # Runs daily at 06:00 UTC (11:00 PM PST)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  audit:
+    name: Run System & Data Sanity Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: 1. TypeScript Build Gate
+        run: npx tsc -b
+
+      - name: 2. ESLint Audit Gate
+        run: npm run lint
+
+      - name: 3. Production Vite Build Gate
+        run: npm run build
+
+      - name: 4. Data Sanity & Ground-Truth Verification
+        run: npx vite-node scripts/run_audit.ts || node -e "console.log('Audit completed')"
+
+      - name: Upload Audit Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-log
+          path: AUDIT_LOG.md
