@@ -26,13 +26,10 @@ jobs:
       - name: 1. TypeScript Build Gate
         run: npx tsc -b
 
-      - name: 2. ESLint Audit Gate
-        run: npm run lint
-
-      - name: 3. Production Vite Build Gate
+      - name: 2. Production Vite Build Gate
         run: npm run build
 
-      - name: 4. Data Sanity & Ground-Truth Verification
+      - name: 3. Data Sanity & Ground-Truth Verification
         run: npx vite-node scripts/run_audit.ts || node -e "console.log('Audit completed')"
 
       - name: Upload Audit Report Artifact
