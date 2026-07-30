@@ -6,6 +6,7 @@
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF.svg)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-18.x-61DAFB.svg)](https://reactjs.org/)
 [![MapLibre GL](https://img.shields.io/badge/MapLibre_GL-4.x-blue.svg)](https://maplibre.org/)
+[![Daily Audit](https://github.com/paucotan/flamemap-na/actions/workflows/daily_audit.yml/badge.svg)](https://github.com/paucotan/flamemap-na/actions/workflows/daily_audit.yml)
 
 ---
 
@@ -29,6 +30,7 @@
 - 🌐 **Bilingual (EN / FR) & Unit Switcher**: Toggle between Metric (`ha, km/h`) and Imperial (`acres, mph`), with bilingual UI.
 - ⚙️ **Browser Timezone Auto-Detection**: Formats all satellite update logs and incident reports in user's local timezone (e.g. `PDT`, `EDT`, `UTC`).
 - 🔗 **Deep-Linking (#map=z/lat/lng)**: Preserves map position in URL hash for 1-click sharing.
+- 🛡️ **Automated Data Sanity & System Audit**: Daily automated cloud verification loop ensuring government API feed integrity, coordinate accuracy, live news ground-truth cross-referencing, and pre-flight Vercel build safety.
 
 ---
 
@@ -52,6 +54,17 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## 🔍 Automated Data Sanity & System Auditing
+
+FlameMap includes an automated, multi-tiered continuous auditing pipeline to guarantee feed integrity and deployment safety:
+
+- **Data Sanity Verification**: Validates geo-coordinate bounding boxes (e.g. Canada lat $41.6^\circ\text{N}$ to $83.1^\circ\text{N}$), feed freshness, and cross-references live incidents against current government news bulletins (*BC Wildfires of Note*, *Alberta Emergency Alert*).
+- **Vercel Pre-Flight Build Gate**: Audits TypeScript compilation (`tsc -b`), ESLint compliance, and Vite production bundle generation before any push.
+- **Daily Cloud Automation**: Runs on GitHub Actions daily at `06:00 UTC`. View the active audit log anytime in [`AUDIT_LOG.md`](file:///Users/ocean/Downloads/flamemap-na/AUDIT_LOG.md).
+- **Emergency Safety Protocol**: Includes instant reset instructions in [`VERCEL_DEPLOYMENT_SAFETY.md`](file:///Users/ocean/Downloads/flamemap-na/VERCEL_DEPLOYMENT_SAFETY.md).
 
 ---
 
