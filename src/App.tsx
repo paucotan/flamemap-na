@@ -68,6 +68,7 @@ export function App() {
   const [windPoints, setWindPoints] = useState<WindPoint[]>([]);
   const [aqiStations, setAqiStations] = useState<AqiStation[]>([]);
   const [viewportWind, setViewportWind] = useState<ViewportWind | undefined>(undefined);
+  const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
 
   const [selectedIncident, setSelectedIncident] = useState<FireIncident | null>(null);
   const [targetLocation, setTargetLocation] = useState<{ lat: number; lng: number; zoom?: number; name: string } | null>(null);
@@ -181,11 +182,13 @@ export function App() {
         mapStyle={mapStyle}
         onSelectIncident={(inc) => setSelectedIncident(inc)}
         onViewportWindChange={(w) => setViewportWind(w)}
+        onWindPointsChange={(pts) => setWindPoints(pts)}
+        onMapReady={(m) => setMapInstance(m)}
         layers={layers}
       />
 
       {/* Smooth Canvas Wind Streamlines Particle Overlay */}
-      <WindParticleCanvas windPoints={windPoints} enabled={layers.wind} />
+      <WindParticleCanvas windPoints={windPoints} enabled={layers.wind} map={mapInstance} />
 
       {/* Bottom Player & Scrubber Timeline */}
       <TimelineControl

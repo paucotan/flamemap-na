@@ -1,32 +1,36 @@
 import React, { useEffect, useRef } from 'react';
+import maplibregl from 'maplibre-gl';
 import { WindPoint } from '../types/fire';
+import { getWindAtCoordinates } from '../services/weatherApi';
 
 interface WindParticleCanvasProps {
   windPoints: WindPoint[];
   enabled: boolean;
+  map?: maplibregl.Map | null;
 }
 
-interface StreamlineParticle {
-  x: number;
-  y: number;
-  history: Array<{ x: number; y: number }>;
+interface GeoParticle {
+  lat: number;
+  lng: number;
+  history: Array<{ lng: number; lat: number }>;
   alpha: number;
   maxLife: number;
   life: number;
   speedMultiplier: number;
 }
 
-export const WindParticleCanvas: React.FC<WindParticleCanvasProps> = ({ windPoints, enabled }) => {
+export const WindParticleCanvas: React.FC<WindParticleCanvasProps> = ({ windPoints, enabled, map }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    if (!enabled || !canvasRef.current) return;
+    if (!enabled || !canvasRef.current || !map) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let animationFrameId: number;
+    let isMoving = false;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -35,112 +39,175 @@ export const WindParticleCanvas: React.FC<WindParticleCanvasProps> = ({ windPoin
     resize();
     window.addEventListener('resize', resize);
 
-    // Continuous Spatial Wind Vector Field
-    const getLocalWindVector = (x: number, y: number): { angle: number; speed: number; speedKmh: number } => {
-      const normX = x / canvas.width;  // 0 (West Coast / BC) to 1 (East Coast)
-      const normY = y / canvas.height; // 0 (North / Yukon) to 1 (South / US)
-
-      let dirDegrees = 225; // Default SSW flow
-      let speedKmh = 22;
-
-      // 1. Pacific Northwest / BC Coast / Yukon: South-Westerly maritime flow
-      if (normX < 0.35 && normY < 0.5) {
-        dirDegrees = 215 + Math.sin(normX * 10) * 25;
-        speedKmh = 28 + Math.cos(normY * 8) * 14;
-      }
-      // 2. California / Southwest US: North-Westerly coastal marine winds
-      else if (normX < 0.35 && normY >= 0.5) {
-        dirDegrees = 315 + Math.sin(normY * 6) * 18;
-        speedKmh = 22 + Math.sin(normX * 5) * 10;
-      }
-      // 3. Canadian Prairies / Alberta / Midwest: Southerly prairie jet stream
-      else if (normX >= 0.35 && normX < 0.7 && normY >= 0.3) {
-        dirDegrees = 195 + Math.cos(normX * 8) * 30;
-        speedKmh = 34 + Math.sin(normY * 10) * 16;
-      }
-      // 4. Northern Shield / Quebec / NWT: North-Westerly polar arctic flow
-      else if (normX >= 0.5 && normY < 0.5) {
-        dirDegrees = 300 + Math.sin(normX * normY * 12) * 35;
-        speedKmh = 26 + Math.cos(normX * 6) * 12;
-      }
-      // 5. Eastern Seaboard / Atlantic: Westerly Atlantic flow
-      else {
-        dirDegrees = 250 + Math.sin(normX * 8) * 22;
-        speedKmh = 30 + Math.sin(normY * 7) * 15;
-      }
-
-      const angle = (dirDegrees * Math.PI) / 180;
-      const speed = 0.4 + (speedKmh / 100) * 1.8;
-
-      return { angle, speed, speedKmh };
+    const onMoveStart = () => {
+      isMoving = true;
+    };
+    const onMoveEnd = () => {
+      isMoving = false;
+      respawnAllParticles();
     };
 
-    // Apple Maps style: Dense network of ~1,100 fine, whispy particles
-    const numParticles = Math.min(1200, Math.floor((window.innerWidth * window.innerHeight) / 1400));
-    const maxTrailLength = 12; // Tail segments for smooth vector curvature
-    const particles: StreamlineParticle[] = [];
+    map.on('movestart', onMoveStart);
+    map.on('moveend', onMoveEnd);
 
-    const createParticle = (): StreamlineParticle => {
-      const px = Math.random() * canvas.width;
-      const py = Math.random() * canvas.height;
+    // Dynamic Spatial Wind Vector Field using Inverse Distance Weighting (IDW) from Live Weather Grid
+    const getGeoWindVector = (lat: number, lng: number): { angle: number; speedKmh: number } => {
+      if (windPoints && windPoints.length > 0) {
+        let totalWeight = 0;
+        let sumSin = 0;
+        let sumCos = 0;
+        let sumSpeed = 0;
+
+        for (let i = 0; i < windPoints.length; i++) {
+          const wp = windPoints[i];
+          const dLat = wp.latitude - lat;
+          const dLng = wp.longitude - lng;
+          const distSq = dLat * dLat + dLng * dLng;
+
+          // Convert Meteorological "FROM" direction (e.g. 180° South wind) into physical "TOWARDS" downwind particle flow
+          const flowDegrees = (wp.directionDegrees - 180 + 360) % 360;
+          const weight = 1.0 / (distSq + 0.0001);
+          const rad = (flowDegrees * Math.PI) / 180;
+
+          sumSin += Math.sin(rad) * weight;
+          sumCos += Math.cos(rad) * weight;
+          sumSpeed += wp.speedKmh * weight;
+          totalWeight += weight;
+        }
+
+        if (totalWeight > 0) {
+          const avgSin = sumSin / totalWeight;
+          const avgCos = sumCos / totalWeight;
+          const avgSpeed = sumSpeed / totalWeight;
+          const interpolatedAngle = Math.atan2(avgSin, avgCos);
+
+          return {
+            angle: interpolatedAngle,
+            speedKmh: Math.max(8, avgSpeed),
+          };
+        }
+      }
+
+      // Fallback spatial weather interpolation if windPoints is loading/empty
+      const fallback = getWindAtCoordinates(lat, lng);
+      const fallbackFlowDegrees = (fallback.directionDegrees - 180 + 360) % 360;
       return {
-        x: px,
-        y: py,
-        history: [{ x: px, y: py }],
-        alpha: 0.12 + Math.random() * 0.48,
-        maxLife: 50 + Math.random() * 80,
-        life: 0,
-        speedMultiplier: 0.8 + Math.random() * 0.4,
+        angle: (fallbackFlowDegrees * Math.PI) / 180,
+        speedKmh: fallback.speedKmh,
       };
     };
 
-    for (let i = 0; i < numParticles; i++) {
-      particles.push(createParticle());
-    }
+    const getBounds = () => {
+      const b = map.getBounds();
+      return {
+        west: b.getWest(),
+        east: b.getEast(),
+        south: b.getSouth(),
+        north: b.getNorth(),
+      };
+    };
+
+    const numParticles = Math.min(1000, Math.max(450, Math.floor((window.innerWidth * window.innerHeight) / 1600)));
+    const maxTrailLength = 16;
+    let particles: GeoParticle[] = [];
+
+    const createParticleInBounds = (): GeoParticle => {
+      const { west, east, south, north } = getBounds();
+      const lng = west + Math.random() * (east - west);
+      const lat = south + Math.random() * (north - south);
+      return {
+        lng,
+        lat,
+        history: [{ lng, lat }],
+        alpha: 0.28 + Math.random() * 0.52,
+        maxLife: 180 + Math.random() * 140, // Smooth 3.0s to 5.3s lifespan
+        life: Math.floor(Math.random() * 80),
+        speedMultiplier: 0.80 + Math.random() * 0.40,
+      };
+    };
+
+    const respawnAllParticles = () => {
+      particles = [];
+      for (let i = 0; i < numParticles; i++) {
+        particles.push(createParticleInBounds());
+      }
+    };
+
+    respawnAllParticles();
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      const bounds = getBounds();
+
       particles.forEach((p, idx) => {
-        p.life++;
-        if (p.life >= p.maxLife || p.x < -40 || p.x > canvas.width + 40 || p.y < -40 || p.y > canvas.height + 40) {
-          particles[idx] = createParticle();
-          return;
-        }
+        if (!isMoving) {
+          p.life++;
+          if (
+            p.life >= p.maxLife ||
+            p.lng < bounds.west ||
+            p.lng > bounds.east ||
+            p.lat < bounds.south ||
+            p.lat > bounds.north
+          ) {
+            particles[idx] = createParticleInBounds();
+            return;
+          }
 
-        // Sample vector field at current position
-        const { angle, speed } = getLocalWindVector(p.x, p.y);
-        const step = speed * p.speedMultiplier;
+          // Sample wind vector at particle's current lat/lng
+          const { angle, speedKmh } = getGeoWindVector(p.lat, p.lng);
 
-        p.x += Math.cos(angle) * step;
-        p.y += Math.sin(angle) * step;
+          // Dynamically calibrate speed & trail scale based on real-time speedKmh (6 km/h vs 40 km/h)
+          const speedFactor = Math.max(0.00035, (speedKmh / 20) * 0.00125);
+          const stepDegree = speedFactor * p.speedMultiplier;
 
-        p.history.push({ x: p.x, y: p.y });
-        if (p.history.length > maxTrailLength) {
-          p.history.shift();
+          p.lng += Math.cos(angle) * stepDegree;
+          p.lat += Math.sin(angle) * stepDegree * 0.75; // Mercator aspect ratio adjustment
+
+          p.history.push({ lng: p.lng, lat: p.lat });
+          if (p.history.length > maxTrailLength) {
+            p.history.shift();
+          }
         }
 
         if (p.history.length < 2) return;
 
-        // Life fade envelope
-        let fadeAlpha = p.alpha;
-        if (p.life < 12) fadeAlpha *= p.life / 12;
-        if (p.life > p.maxLife - 20) fadeAlpha *= (p.maxLife - p.life) / 20;
+        // Map trajectory points to current screen pixels
+        const screenPoints = p.history.map(pt => map.project([pt.lng, pt.lat]));
+        const head = screenPoints[screenPoints.length - 1];
 
-        // Render paper-thin curved multi-segment streamline trail (Apple Maps style)
-        ctx.beginPath();
-        ctx.moveTo(p.history[0].x, p.history[0].y);
-
-        for (let i = 1; i < p.history.length; i++) {
-          const pt = p.history[i];
-          ctx.lineTo(pt.x, pt.y);
+        if (
+          head.x < -30 ||
+          head.x > canvas.width + 30 ||
+          head.y < -30 ||
+          head.y > canvas.height + 30
+        ) {
+          return;
         }
 
-        ctx.strokeStyle = `rgba(255, 255, 255, ${fadeAlpha})`;
-        ctx.lineWidth = 0.75;
+        // Life fade envelope (smooth fade-in and fade-out over ~4s lifespan)
+        let fadeAlpha = p.alpha;
+        if (p.life < 28) fadeAlpha *= p.life / 28;
+        if (p.life > p.maxLife - 38) fadeAlpha *= (p.maxLife - p.life) / 38;
+
+        // Apple Maps Style: Multi-segment tapered comet streamline trail
+        ctx.beginPath();
+        ctx.moveTo(screenPoints[0].x, screenPoints[0].y);
+        for (let i = 1; i < screenPoints.length; i++) {
+          ctx.lineTo(screenPoints[i].x, screenPoints[i].y);
+        }
+
+        ctx.strokeStyle = `rgba(240, 246, 255, ${fadeAlpha * 0.76})`;
+        ctx.lineWidth = 1.15;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
+
+        // Draw bright glowing comet head tip
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, 1.0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${fadeAlpha * 0.95})`;
+        ctx.fill();
       });
 
       animationFrameId = requestAnimationFrame(render);
@@ -150,16 +217,18 @@ export const WindParticleCanvas: React.FC<WindParticleCanvasProps> = ({ windPoin
 
     return () => {
       window.removeEventListener('resize', resize);
+      map.off('movestart', onMoveStart);
+      map.off('moveend', onMoveEnd);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [enabled, windPoints]);
+  }, [enabled, map, windPoints]);
 
   if (!enabled) return null;
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 pointer-events-none z-10 opacity-85"
+      className="absolute inset-0 pointer-events-none z-10 opacity-90"
     />
   );
 };

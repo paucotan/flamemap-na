@@ -61,6 +61,58 @@ export function getWindAtCoordinates(lat: number, lng: number): ViewportWind {
   };
 }
 
+export async function fetchViewportWindGrid(
+  minLat: number,
+  maxLat: number,
+  minLng: number,
+  maxLng: number
+): Promise<WindPoint[]> {
+  const lats: number[] = [];
+  const lngs: number[] = [];
+
+  const latStep = (maxLat - minLat) / 3;
+  const lngStep = (maxLng - minLng) / 3;
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      lats.push(Number((minLat + i * latStep).toFixed(3)));
+      lngs.push(Number((minLng + j * lngStep).toFixed(3)));
+    }
+  }
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lngs.join(',')}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Open-Meteo viewport grid fetch error');
+
+    const data = await res.json();
+    const resultsArray = Array.isArray(data) ? data : [data];
+    const windPoints: WindPoint[] = [];
+
+    resultsArray.forEach((item, idx) => {
+      const lat = lats[idx];
+      const lng = lngs[idx];
+      const speedKmh = Math.round(item.current?.wind_speed_10m || 18);
+      const gustKmh = Math.round(item.current?.wind_gusts_10m || speedKmh * 1.3);
+      const directionDegrees = Math.round(item.current?.wind_direction_10m || 225);
+
+      windPoints.push({
+        latitude: lat,
+        longitude: lng,
+        speedKmh,
+        speedMph: Math.round(speedKmh * 0.621371),
+        directionDegrees,
+        gustKmh,
+      });
+    });
+
+    return windPoints;
+  } catch (e) {
+    console.warn('Falling back to static wind grid:', e);
+    return fetchWindGrid(minLat, maxLat, minLng, maxLng);
+  }
+}
+
 export async function fetchWindGrid(
   minLat: number,
   maxLat: number,

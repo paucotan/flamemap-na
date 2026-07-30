@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Hotspot, FireIncident, EvacuationAlert, WindPoint, UnitSystem, ViewportWind } from '../types/fire';
-import { getWindAtCoordinates, fetchLiveWindAtCoordinates } from '../services/weatherApi';
+import { getWindAtCoordinates, fetchLiveWindAtCoordinates, fetchViewportWindGrid } from '../services/weatherApi';
 import { AqiStation } from '../services/aqiApi';
 import { Language } from '../utils/i18n';
 
@@ -20,6 +20,8 @@ interface MapContainerProps {
   mapStyle: MapStyleMode;
   onSelectIncident: (incident: FireIncident) => void;
   onViewportWindChange: (wind: ViewportWind) => void;
+  onWindPointsChange?: (points: WindPoint[]) => void;
+  onMapReady?: (map: maplibregl.Map) => void;
   layers: { hotspots: boolean; perimeters: boolean; wind: boolean; evacuations: boolean; smoke: boolean; airQuality: boolean };
 }
 
@@ -36,6 +38,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   mapStyle,
   onSelectIncident,
   onViewportWindChange,
+  onWindPointsChange,
+  onMapReady,
   layers,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -141,6 +145,17 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
       const localWind = await fetchLiveWindAtCoordinates(center.lat, center.lng);
       onViewportWindChange(localWind);
+
+      if (onWindPointsChange) {
+        const bounds = map.getBounds();
+        const gridPoints = await fetchViewportWindGrid(
+          bounds.getSouth(),
+          bounds.getNorth(),
+          bounds.getWest(),
+          bounds.getEast()
+        );
+        onWindPointsChange(gridPoints);
+      }
     };
 
     map.on('load', () => {
@@ -452,6 +467,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       updateCenterAndHash();
 
       setMapLoaded(true);
+      if (onMapReady) onMapReady(map);
     });
 
     mapRef.current = map;
