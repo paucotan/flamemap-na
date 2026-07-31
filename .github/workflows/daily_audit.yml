@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -30,7 +30,7 @@ jobs:
         run: npm run build
 
       - name: 3. Data Sanity & Ground-Truth Verification
-        run: npx vite-node scripts/run_audit.ts || node -e "console.log('Audit completed')"
+        run: npm run audit || node -e "console.log('Audit completed')"
 
       - name: Upload Audit Report Artifact
         uses: actions/upload-artifact@v4
